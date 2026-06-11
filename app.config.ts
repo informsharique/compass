@@ -1,10 +1,11 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
+import packageJson from "./package.json";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "compass",
   slug: "compass",
-  version: "1.0.0",
+  version: packageJson.version,
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "compass",
