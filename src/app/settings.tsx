@@ -3,6 +3,7 @@ import { View, ScrollView } from "react-native";
 import { Typography, Card, Button, useThemeColor, PressableFeedback } from "heroui-native";
 import { Stack, useRouter } from "expo-router";
 import { useCSSVariable } from "uniwind";
+import Constants from "expo-constants";
 import {
 	useSettings,
 	ThemeColor,
@@ -445,6 +446,13 @@ export default function SettingsScreen(): JSX.Element {
               );
             })}
           </Card>
+        </View>
+
+        {/* App Version */}
+        <View className="items-center justify-center mt-8 mb-4">
+          <Typography className="text-zinc-500 text-xs font-medium">
+            Version {Constants.expoConfig?.version ?? "1.0.0"}
+          </Typography>
         </View>
       </ScrollView>
     </View>
