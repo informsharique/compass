@@ -42,6 +42,12 @@
     --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --field-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 38%);
+    --theme-amber: hsl(38, 92%, 45%);
+    --theme-crimson: hsl(346, 84%, 45%);
+    --theme-emerald: hsl(142, 72%, 29%);
   }
 
   @variant dark {
@@ -80,6 +86,12 @@
     --surface-shadow: none;
     --overlay-shadow: 0 0 1px rgba(255, 255, 255, 0.2) inset;
     --field-shadow: none;
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 50%);
+    --theme-amber: hsl(45, 93%, 47%);
+    --theme-crimson: hsl(346, 84%, 60%);
+    --theme-emerald: hsl(142, 70%, 45%);
   }
 
   /* Cyan Theme */
@@ -119,6 +131,12 @@
     --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --field-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 38%);
+    --theme-amber: hsl(38, 92%, 45%);
+    --theme-crimson: hsl(346, 84%, 45%);
+    --theme-emerald: hsl(142, 72%, 29%);
   }
   @variant cyan-dark {
     --background: hsl(240, 10%, 3.9%);
@@ -156,6 +174,12 @@
     --surface-shadow: none;
     --overlay-shadow: 0 0 1px rgba(255, 255, 255, 0.2) inset;
     --field-shadow: none;
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 50%);
+    --theme-amber: hsl(45, 93%, 47%);
+    --theme-crimson: hsl(346, 84%, 60%);
+    --theme-emerald: hsl(142, 70%, 45%);
   }
 
   /* Amber Theme */
@@ -195,6 +219,12 @@
     --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --field-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 38%);
+    --theme-amber: hsl(38, 92%, 45%);
+    --theme-crimson: hsl(346, 84%, 45%);
+    --theme-emerald: hsl(142, 72%, 29%);
   }
   @variant amber-dark {
     --background: hsl(20, 10%, 5%);
@@ -232,6 +262,12 @@
     --surface-shadow: none;
     --overlay-shadow: 0 0 1px rgba(255, 255, 255, 0.2) inset;
     --field-shadow: none;
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 50%);
+    --theme-amber: hsl(45, 93%, 47%);
+    --theme-crimson: hsl(346, 84%, 60%);
+    --theme-emerald: hsl(142, 70%, 45%);
   }
 
   /* Crimson Theme */
@@ -271,6 +307,12 @@
     --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --field-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 38%);
+    --theme-amber: hsl(38, 92%, 45%);
+    --theme-crimson: hsl(346, 84%, 45%);
+    --theme-emerald: hsl(142, 72%, 29%);
   }
   @variant crimson-dark {
     --background: hsl(346, 40%, 6%);
@@ -308,6 +350,12 @@
     --surface-shadow: none;
     --overlay-shadow: 0 0 1px rgba(255, 255, 255, 0.2) inset;
     --field-shadow: none;
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 50%);
+    --theme-amber: hsl(45, 93%, 47%);
+    --theme-crimson: hsl(346, 84%, 60%);
+    --theme-emerald: hsl(142, 70%, 45%);
   }
 
   /* Emerald Theme */
@@ -347,6 +395,12 @@
     --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --overlay-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --field-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 38%);
+    --theme-amber: hsl(38, 92%, 45%);
+    --theme-crimson: hsl(346, 84%, 45%);
+    --theme-emerald: hsl(142, 72%, 29%);
   }
   @variant emerald-dark {
     --background: hsl(140, 25%, 5%);
@@ -384,5 +438,11 @@
     --surface-shadow: none;
     --overlay-shadow: 0 0 1px rgba(255, 255, 255, 0.2) inset;
     --field-shadow: none;
+
+    /* Preview theme accent variables */
+    --theme-cyan: hsl(180, 100%, 50%);
+    --theme-amber: hsl(45, 93%, 47%);
+    --theme-crimson: hsl(346, 84%, 60%);
+    --theme-emerald: hsl(142, 70%, 45%);
   }
 }
