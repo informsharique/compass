@@ -22,6 +22,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
   const accentColor = useThemeColor('accent');
   const foregroundColor = useThemeColor('foreground');
   const borderLinkColor = useThemeColor('border');
+  const surfaceColor = useThemeColor('surface');
+  const backgroundColor = useThemeColor('background');
 
   const size = 400;
   const center = size / 2;
@@ -253,8 +255,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
         <Svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           <Defs>
             <RadialGradient id="dialGrad" cx="50%" cy="50%" rx="50%" ry="50%">
-              <Stop offset="70%" stopColor="#09090b" stopOpacity="0.8" />
-              <Stop offset="100%" stopColor="#18181b" stopOpacity="0.4" />
+              <Stop offset="70%" stopColor={surfaceColor} stopOpacity="0.9" />
+              <Stop offset="100%" stopColor={backgroundColor} stopOpacity="0.5" />
             </RadialGradient>
           </Defs>
   

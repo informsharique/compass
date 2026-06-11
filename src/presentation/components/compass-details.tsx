@@ -29,14 +29,14 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
   const hasLoc = location && !location.error;
 
   return (
-    <Card className="bg-surface/60 border border-border/40 p-5 rounded-2xl w-full max-w-sm gap-4 shadow-2xl">
+    <Card className="bg-surface/61 border border-border/40 p-5 rounded-2xl w-full max-w-sm gap-4 shadow-2xl">
       {/* Header */}
       <View className="items-center border-b border-border/30 pb-2">
         <Typography className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">
           {hasLoc && location.city ? 'Current Location' : 'Telemetry Details'}
         </Typography>
         <Typography className="text-foreground text-base font-bold">
-          {hasLoc && location.city ? location.city : 'Instrument Status'}
+          {hasLoc && location.city ? location.city : 'Compass Status'}
         </Typography>
       </View>
 
