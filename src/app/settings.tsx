@@ -1,7 +1,8 @@
-import { useState, useEffect, type JSX } from "react";
+import { useState, type JSX } from "react";
 import { View, ScrollView } from "react-native";
 import { Typography, Card, Button, useThemeColor, PressableFeedback } from "heroui-native";
 import { Stack, useRouter } from "expo-router";
+import { useCSSVariable } from "uniwind";
 import {
 	useSettings,
 	ThemeColor,
@@ -38,10 +39,12 @@ function ColorSelectionDot({
   const scale = useSharedValue(isSelected ? 1 : 0.6);
   const opacity = useSharedValue(isSelected ? 1 : 0);
 
-  useEffect(() => {
-    scale.value = withSpring(isSelected ? 1 : 0.6, { damping: 15, stiffness: 220, mass: 0.6 });
-    opacity.value = withTiming(isSelected ? 1 : 0, { duration: 120 });
-  }, [isSelected]);
+  scale.value = withSpring(isSelected ? 1 : 0.6, {
+    damping: 15,
+    stiffness: 220,
+    mass: 0.6,
+  });
+  opacity.value = withTiming(isSelected ? 1 : 0, { duration: 120 });
 
   const ringStyle = useAnimatedStyle(() => {
     return {
@@ -62,9 +65,10 @@ function ColorSelectionDot({
             height: 56,
             borderRadius: 28,
             borderWidth: 2,
-            borderColor: resolvedAppearanceMode === "dark"
-              ? applyAlpha(themeForeground, "80%")
-              : applyAlpha(themeForeground, "25%"),
+            borderColor:
+              resolvedAppearanceMode === "dark"
+                ? applyAlpha(themeForeground, "80%")
+                : applyAlpha(themeForeground, "25%"),
           },
         ]}
       />
@@ -98,9 +102,7 @@ function ColorSelectionDot({
             viewBox="0 0 24 24"
             fill="none"
             stroke={
-              color.id === "amber" && resolvedAppearanceMode === "light"
-                ? "#000000"
-                : "#ffffff"
+              color.id === "amber" && resolvedAppearanceMode === "light" ? "#000000" : "#ffffff"
             }
             strokeWidth="3"
           >
@@ -131,11 +133,9 @@ export default function SettingsScreen(): JSX.Element {
 
   const [containerWidth, setContainerWidth] = useState(0);
   const activeIndex = appearanceMode === "system" ? 0 : appearanceMode === "light" ? 1 : 2;
-  const selectedIndex = useSharedValue(0);
 
-  useEffect(() => {
-    selectedIndex.value = withTiming(activeIndex, { duration: 180 });
-  }, [activeIndex]);
+  const selectedIndex = useSharedValue(activeIndex);
+  selectedIndex.value = withTiming(activeIndex, { duration: 180 });
 
   const padding = 6;
   const gap = 6;
@@ -160,7 +160,7 @@ export default function SettingsScreen(): JSX.Element {
       backgroundColor: applyAlpha(themeAccent, "15%"),
       borderColor: applyAlpha(themeAccent, "20%"),
       borderWidth: 1,
-    }
+    },
   ];
 
   const handleClose = () => {
@@ -183,12 +183,19 @@ export default function SettingsScreen(): JSX.Element {
     setAppearanceMode(mode);
   };
 
+  const [cyanVal, amberVal, crimsonVal, emeraldVal] = useCSSVariable([
+    "--theme-cyan",
+    "--theme-amber",
+    "--theme-crimson",
+    "--theme-emerald",
+  ]) as (string | undefined)[];
+
   // Predefined color choices
   const colors: { id: ThemeColor; name: string; hex: string }[] = [
-    { id: "cyan", name: "Cyber Cyan", hex: "#00f0ff" },
-    { id: "amber", name: "Amber Gold", hex: "#f59e0b" },
-    { id: "crimson", name: "Crimson Red", hex: "#e11d48" },
-    { id: "emerald", name: "Emerald Green", hex: "#10b981" },
+    { id: "cyan", name: "Cyber Cyan", hex: cyanVal || "#00f0ff" },
+    { id: "amber", name: "Amber Gold", hex: amberVal || "#f59e0b" },
+    { id: "crimson", name: "Crimson Red", hex: crimsonVal || "#e11d48" },
+    { id: "emerald", name: "Emerald Green", hex: emeraldVal || "#10b981" },
   ];
 
   return (
@@ -229,7 +236,10 @@ export default function SettingsScreen(): JSX.Element {
                 </Svg>
               </Button>
               <View className="flex-col gap-0.25">
-                <Typography.Heading type="h2" className="text-xl font-bold text-foreground leading-tight">
+                <Typography.Heading
+                  type="h2"
+                  className="text-xl font-bold text-foreground leading-tight"
+                >
                   Settings
                 </Typography.Heading>
                 <Typography.Paragraph className="text-zinc-500 text-sm leading-tight">
@@ -254,12 +264,7 @@ export default function SettingsScreen(): JSX.Element {
             onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
             className="flex-row p-1.5 gap-1.5 rounded-2xl bg-surface/40 border border-border/10 relative"
           >
-            {buttonWidth > 0 && (
-              <Animated.View
-                style={indicatorStyle}
-                className="rounded-xl"
-              />
-            )}
+            {buttonWidth > 0 && <Animated.View style={indicatorStyle} className="rounded-xl" />}
 
             {/* System */}
             <PressableFeedback
