@@ -1,13 +1,49 @@
-import * as Haptics from 'expo-haptics';
+import { Presets } from "react-native-pulsar";
 
 export const triggerHapticSelection = () => {
-  Haptics.selectionAsync().catch(() => {});
+  try {
+    Presets.System.selection();
+  } catch (e) {
+    console.log(e);
+  }
 };
 
-export const triggerHapticImpact = (style = Haptics.ImpactFeedbackStyle.Light) => {
-  Haptics.impactAsync(style).catch(() => {});
+export const triggerHapticImpact = () => {
+  try {
+    Presets.System.impactLight();
+  } catch (e) {
+    console.log(e);
+  }
 };
 
-export const triggerHapticNotification = (type = Haptics.NotificationFeedbackType.Success) => {
-  Haptics.notificationAsync(type).catch(() => {});
+export const triggerHapticNotification = () => {
+  try {
+    Presets.System.notificationSuccess();
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+export const triggerHapticThemeChange = () => {
+  try {
+    Presets.ripple();
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+export const triggerHapticColorChange = () => {
+  try {
+    Presets.spark();
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+export const triggerHapticDesignChange = () => {
+  try {
+    Presets.combinationLock();
+  } catch (e) {
+    console.log(e);
+  }
 };
