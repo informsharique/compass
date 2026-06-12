@@ -2,14 +2,52 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, Polygon, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
+	useAnimatedStyle,
+	useSharedValue,
+	withSpring,
+	useAnimatedProps,
+	SharedValue,
 } from 'react-native-reanimated';
 import { useThemeColor, PressableFeedback } from 'heroui-native';
 import { useSettings } from '../../domain/settings/settings-store';
-import { triggerHapticSelection } from './haptic-helper';
+import { triggerHaptics } from './haptic-helper';
 import { applyAlpha } from './color-helper';
+
+const AnimatedG = Animated.createAnimatedComponent(G);
+
+interface UprightTextProps {
+  x: number;
+  y: number;
+  rotation: SharedValue<number>;
+  children: React.ReactNode;
+  [key: string]: any;
+}
+
+const UprightText: React.FC<UprightTextProps> = ({ x, y, rotation, children, ...props }) => {
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      transform: [
+        { translateX: x },
+        { translateY: y },
+        { rotate: `${-rotation.value}deg` as any },
+      ] as any,
+    };
+  });
+
+  return (
+    <AnimatedG animatedProps={animatedProps}>
+      <SvgText
+        x={0}
+        y={0}
+        textAnchor="middle"
+        alignmentBaseline="middle"
+        {...props}
+      >
+        {children}
+      </SvgText>
+    </AnimatedG>
+  );
+};
 
 interface CompassDialProps {
   heading: number;
@@ -28,7 +66,6 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
   const size = 400;
   const center = size / 2;
   const radius = size * 0.45;
-  const innerRadius = radius - 15;
 
   // Shortest path interpolation to prevent 360 -> 0 degree spin-back glitch
   useEffect(() => {
@@ -52,10 +89,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
 
 
   const handlePress = () => {
-    triggerHapticSelection();
+    triggerHaptics();
   };
-
-  // RENDER HELPERS FOR DESIGNS
 
   const renderClassicDial = () => {
     const ticks = [];
@@ -111,17 +146,17 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
 
         {ticks}
 
-        {/* Cardinal Labels */}
-        <SvgText x={center} y={center - innerRadius + 18} fill="#ef4444" fontSize="18" fontWeight="bold" textAnchor="middle">N</SvgText>
-        <SvgText x={center + innerRadius - 10} y={center + 6} fill={foregroundColor} fontSize="16" fontWeight="bold" textAnchor="middle">E</SvgText>
-        <SvgText x={center} y={center + innerRadius - 5} fill={foregroundColor} fontSize="16" fontWeight="bold" textAnchor="middle">S</SvgText>
-        <SvgText x={center - innerRadius + 10} y={center + 6} fill={foregroundColor} fontSize="16" fontWeight="bold" textAnchor="middle">W</SvgText>
+        {/* Cardinal Labels - placed at radius 148 */}
+        <UprightText x={center} y={200 - 148} rotation={rotation} fill="#ef4444" fontSize="18" fontWeight="bold">N</UprightText>
+        <UprightText x={200 + 148} y={center} rotation={rotation} fill={foregroundColor} fontSize="16" fontWeight="bold">E</UprightText>
+        <UprightText x={center} y={200 + 148} rotation={rotation} fill={foregroundColor} fontSize="16" fontWeight="bold">S</UprightText>
+        <UprightText x={200 - 148} y={center} rotation={rotation} fill={foregroundColor} fontSize="16" fontWeight="bold">W</UprightText>
 
-        {/* Ordinals */}
-        <SvgText x={center + innerRadius * 0.6} y={center - innerRadius * 0.6 + 6} fill={`${foregroundColor}90`} fontSize="11" textAnchor="middle">NE</SvgText>
-        <SvgText x={center + innerRadius * 0.6} y={center + innerRadius * 0.6 + 6} fill={`${foregroundColor}90`} fontSize="11" textAnchor="middle">SE</SvgText>
-        <SvgText x={center - innerRadius * 0.6} y={center + innerRadius * 0.6 + 6} fill={`${foregroundColor}90`} fontSize="11" textAnchor="middle">SW</SvgText>
-        <SvgText x={center - innerRadius * 0.6} y={center - innerRadius * 0.6 + 6} fill={`${foregroundColor}90`} fontSize="11" textAnchor="middle">NW</SvgText>
+        {/* Ordinals - placed at radius 132 */}
+        <UprightText x={200 + 93.3} y={200 - 93.3} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11">NE</UprightText>
+        <UprightText x={200 + 93.3} y={200 + 93.3} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11">SE</UprightText>
+        <UprightText x={200 - 93.3} y={200 + 93.3} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11">SW</UprightText>
+        <UprightText x={200 - 93.3} y={200 - 93.3} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11">NW</UprightText>
 
         {/* Classic Compass Rose */}
         <G transform={`translate(${center - 25}, ${center - 25})`}>
@@ -172,11 +207,17 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
 
         {ticks}
 
-        {/* Modern Sci-Fi Text labels */}
-        <SvgText x={center} y={center - innerRadius + 22} fill={accentColor} fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">000°</SvgText>
-        <SvgText x={center + innerRadius - 18} y={center + 5} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace" textAnchor="middle">090°</SvgText>
-        <SvgText x={center} y={center + innerRadius - 10} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace" textAnchor="middle">180°</SvgText>
-        <SvgText x={center - innerRadius + 18} y={center + 5} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace" textAnchor="middle">270°</SvgText>
+        {/* Modern Sci-Fi Text labels - Letters at radius 146 */}
+        <UprightText x={center} y={200 - 146} rotation={rotation} fill={accentColor} fontSize="16" fontWeight="bold" fontFamily="monospace">N</UprightText>
+        <UprightText x={200 + 146} y={center} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace">E</UprightText>
+        <UprightText x={center} y={200 + 146} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace">S</UprightText>
+        <UprightText x={200 - 146} y={center} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="bold" fontFamily="monospace">W</UprightText>
+
+        {/* Modern Sci-Fi Text labels - Degrees at radius 124 */}
+        <UprightText x={center} y={200 - 124} rotation={rotation} fill={`${accentColor}90`} fontSize="11" fontWeight="bold" fontFamily="monospace">0°</UprightText>
+        <UprightText x={200 + 124} y={center} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11" fontWeight="bold" fontFamily="monospace">90°</UprightText>
+        <UprightText x={center} y={200 + 124} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11" fontWeight="bold" fontFamily="monospace">180°</UprightText>
+        <UprightText x={200 - 124} y={center} rotation={rotation} fill={`${foregroundColor}90`} fontSize="11" fontWeight="bold" fontFamily="monospace">270°</UprightText>
 
         {/* Digital display box */}
         <Circle cx={center} cy={center} r="28" fill="#00000030" stroke={`${accentColor}40`} strokeWidth="1.5" />
@@ -213,11 +254,11 @@ export const CompassDial: React.FC<CompassDialProps> = ({ heading }) => {
 
         {ticks}
 
-        {/* Clean, thin Typography */}
-        <SvgText x={center} y={center - innerRadius + 28} fill="#ef4444" fontSize="16" fontWeight="300" textAnchor="middle">N</SvgText>
-        <SvgText x={center + innerRadius - 15} y={center + 5} fill={foregroundColor} fontSize="14" fontWeight="300" textAnchor="middle">E</SvgText>
-        <SvgText x={center} y={center + innerRadius - 15} fill={foregroundColor} fontSize="14" fontWeight="300" textAnchor="middle">S</SvgText>
-        <SvgText x={center - innerRadius + 15} y={center + 5} fill={foregroundColor} fontSize="14" fontWeight="300" textAnchor="middle">W</SvgText>
+        {/* Clean, thin Typography - placed at radius 145 */}
+        <UprightText x={center} y={200 - 145} rotation={rotation} fill="#ef4444" fontSize="16" fontWeight="300">N</UprightText>
+        <UprightText x={200 + 145} y={center} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="300">E</UprightText>
+        <UprightText x={center} y={200 + 145} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="300">S</UprightText>
+        <UprightText x={200 - 145} y={center} rotation={rotation} fill={foregroundColor} fontSize="14" fontWeight="300">W</UprightText>
 
         {/* Minimalist Pointer Needles */}
         <G>

@@ -9,65 +9,55 @@ import { BlurTargetView, BlurTargetContext } from "../presentation/components/bl
 import { CompassHeader } from "../presentation/components/compass-header";
 import { HeadingReadout } from "../presentation/components/heading-readout";
 import { CalibrationButton } from "../presentation/components/calibration-button";
-import { TelemetryDialog } from "../presentation/components/telemetry-dialog";
+import { InformationDialog } from "../presentation/components/information-dialog";
 
 export default function HomeScreen(): JSX.Element {
   const { heading, calibrated } = useCompass();
   const location = useCompassLocation();
   const blurTargetRef = useRef<View>(null);
 
-  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
+  const [isInformationOpen, setIsInformationOpen] = useState(false);
   const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
 
   const currentHeading = heading ? Math.round(heading.trueHeading) : 0;
-  const cardinalDir = heading ? heading.cardinal : 'N';
+  const cardinalDir = heading ? heading.cardinal : "N";
   const headingAccuracy = heading ? heading.headingAccuracy : null;
 
   return (
-    <BlurTargetContext.Provider value={blurTargetRef}>
-      <View className="flex-1 bg-background">
-        <BlurTargetView ref={blurTargetRef} className="flex-1">
-          <ScrollView
-            contentContainerStyle={{
-              flexGrow: 1,
-              justifyContent: "space-between",
-              paddingVertical: 24,
-              paddingHorizontal: 16,
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Header Title & Navigation Actions */}
-            <CompassHeader onOpenTelemetry={() => setIsTelemetryOpen(true)} />
+    <BlurTargetContext value={blurTargetRef}>
+      <BlurTargetView ref={blurTargetRef} className="flex-1">
+        <View className="absolute inset-0 bg-background" />
+        <ScrollView
+          contentContainerClassName="grow justify-between py-6 px-4"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Title & Navigation Actions */}
+          <CompassHeader onOpenInformation={() => setIsInformationOpen(true)} />
 
-            {/* Main content (Single flow) */}
-            <View className="flex-1 items-center justify-center gap-6 my-4 w-full">
-              <HeadingReadout heading={currentHeading} cardinal={cardinalDir} />
-              <CompassDial heading={currentHeading} />
-            </View>
+          {/* Main content (Single flow) */}
+          <View className="flex-1 items-center justify-center gap-6 my-4 w-full">
+            <HeadingReadout heading={currentHeading} cardinal={cardinalDir} />
+            <CompassDial heading={currentHeading} />
+          </View>
 
-            {/* Footer Actions */}
-            <CalibrationButton
-              calibrated={calibrated}
-              onPress={() => setIsCalibrationOpen(true)}
-            />
-          </ScrollView>
-        </BlurTargetView>
+          {/* Footer Actions */}
+          <CalibrationButton calibrated={calibrated} onPress={() => setIsCalibrationOpen(true)} />
+        </ScrollView>
 
-        {/* Telemetry Details Overlay using HeroUI Native Dialog */}
-        <TelemetryDialog
-          isOpen={isTelemetryOpen}
-          onOpenChange={setIsTelemetryOpen}
+        {/* Information Details Overlay using HeroUI Native Dialog */}
+        <InformationDialog
+          isOpen={isInformationOpen}
+          onOpenChange={setIsInformationOpen}
           location={location}
           accuracy={headingAccuracy}
-          blurTargetRef={blurTargetRef}
         />
 
         {/* Figure-Eight Calibration Modal Overlay */}
         <CompassCalibration
-          visible={isCalibrationOpen && !calibrated}
+          visible={isCalibrationOpen}
           onDismiss={() => setIsCalibrationOpen(false)}
         />
-      </View>
-    </BlurTargetContext.Provider>
+      </BlurTargetView>
+    </BlurTargetContext>
   );
 }

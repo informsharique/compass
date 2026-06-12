@@ -10,15 +10,15 @@ import {
 	CompassDesign,
 	AppearanceMode,
 } from "../domain/settings/settings-store";
-import {
-	triggerHapticSelection,
-	triggerHapticThemeChange,
-	triggerHapticColorChange,
-	triggerHapticDesignChange,
-} from "../presentation/components/haptic-helper";
+import { triggerHaptics } from "../presentation/components/haptic-helper";
 import Svg, { Path } from "react-native-svg";
 import { applyAlpha } from "../presentation/components/color-helper";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import Animated, {
+	useAnimatedStyle,
+	useSharedValue,
+	withSpring,
+	withTiming,
+} from "react-native-reanimated";
 
 import SunIcon from "../../assets/icons/sun.svg";
 import MoonIcon from "../../assets/icons/moon.svg";
@@ -165,22 +165,22 @@ export default function SettingsScreen(): JSX.Element {
   ];
 
   const handleClose = () => {
-    triggerHapticSelection();
+    triggerHaptics();
     router.back();
   };
 
   const handleSelectColor = (color: ThemeColor) => {
-    triggerHapticColorChange();
+    triggerHaptics();
     setThemeColor(color);
   };
 
   const handleSelectDesign = (design: CompassDesign) => {
-    triggerHapticDesignChange();
+    triggerHaptics();
     setCompassDesign(design);
   };
 
   const handleSelectAppearance = (mode: AppearanceMode) => {
-    triggerHapticThemeChange();
+    triggerHaptics();
     setAppearanceMode(mode);
   };
 
