@@ -5,15 +5,20 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SettingsProvider } from "../domain/settings/settings-store";
 
 import "../global.css";
+import { useUniwind } from "uniwind";
 
 function AppNavigator(): JSX.Element {
   const backgroundColor = useThemeColor("background");
+  const { theme } = useUniwind();
+  const isDark = theme.includes("dark");
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor },
+        statusBarStyle: isDark ? "light" : "dark",
+        statusBarAnimation: "fade",
       }}
     >
       <Stack.Screen name="index" />
@@ -25,11 +30,11 @@ function AppNavigator(): JSX.Element {
 export default function RootLayout(): JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
-        <SettingsProvider>
+      <SettingsProvider>
+        <HeroUINativeProvider>
           <AppNavigator />
-        </SettingsProvider>
-      </HeroUINativeProvider>
+        </HeroUINativeProvider>
+      </SettingsProvider>
     </GestureHandlerRootView>
   );
 }

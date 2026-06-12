@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
 import { ExpoConfig, ConfigContext } from "expo/config";
 import packageJson from "./package.json";
+
+dotenv.config();
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -9,6 +12,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "compass",
+  owner: process.env.EXPO_PUBLIC_ACCOUNT_OWNER,
   userInterfaceStyle: "automatic",
   ios: {
     supportsTablet: true,
@@ -23,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "com.sharique.compass",
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
-	  backgroundImage: "./assets/images/android-icon-background.png",
+      backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
@@ -41,11 +45,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           image: "./assets/images/splash-icon-dark.png",
           backgroundColor: "#000000",
         },
+        imageWidth: 200,
+      },
+    ],
+    [
+      "expo-build-properties",
+      {
+        android: {
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+        },
       },
     ],
   ],
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: {
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+    },
   },
 });

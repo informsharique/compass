@@ -4,28 +4,28 @@ import { Typography, Button, useThemeColor } from 'heroui-native';
 import { Link } from 'expo-router';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { applyAlpha } from './color-helper';
-import { triggerHapticSelection } from './haptic-helper';
+import { triggerHaptics } from './haptic-helper';
 
 interface CompassHeaderProps {
-  onOpenTelemetry: () => void;
+  onOpenInformation: () => void;
 }
 
-export const CompassHeader: React.FC<CompassHeaderProps> = ({ onOpenTelemetry }) => {
+export const CompassHeader: React.FC<CompassHeaderProps> = ({ onOpenInformation }) => {
   const themeForeground = useThemeColor('foreground');
 
-  const handleOpenTelemetry = () => {
-    triggerHapticSelection();
-    onOpenTelemetry();
+  const handleOpenInformation = () => {
+    triggerHaptics();
+    onOpenInformation();
   };
 
   return (
     <View className="flex-row justify-between items-center w-full max-w-md mx-auto px-2 mt-4">
-      {/* Left: Telemetry Trigger */}
+      {/* Left: Information Trigger */}
       <Button
         size="sm"
         variant="ghost"
         isIconOnly
-        onPress={handleOpenTelemetry}
+        onPress={handleOpenInformation}
         feedbackVariant="scale"
         animation={{
           scale: {
@@ -56,7 +56,7 @@ export const CompassHeader: React.FC<CompassHeaderProps> = ({ onOpenTelemetry })
         <Button
           size="sm"
           variant="ghost"
-          onPress={triggerHapticSelection}
+          onPress={triggerHaptics}
           feedbackVariant="scale"
           animation={{
             scale: {

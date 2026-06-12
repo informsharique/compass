@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, use } from "react";
 import { View } from "react-native";
 import { Typography, Card, Button, Dialog, useThemeColor } from "heroui-native";
 import { BlurTargetContext, DialogOverlayBlurView } from "./blur";
@@ -12,7 +12,7 @@ import Animated, {
 	FlipOutXUp,
 } from "react-native-reanimated";
 import Svg, { Circle, Path as SvgPath, G } from "react-native-svg";
-import { triggerHapticSelection } from "./haptic-helper";
+import { triggerHaptics } from "./haptic-helper";
 import { applyAlpha } from "./color-helper";
 import { useCompass } from "../../application/compass/use-compass";
 
@@ -27,7 +27,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
   const animValue = useSharedValue(0);
   const themeAccent = useThemeColor("accent");
   const { calibrated, magneticField } = useCompass();
-  const blurTargetRef = useContext(BlurTargetContext);
+  const blurTargetRef = use(BlurTargetContext);
 
   useEffect(() => {
     if (visible) {
@@ -43,17 +43,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
     }
   }, [visible, animValue]);
 
-  // Auto-dismiss calibration modal shortly after success
-  useEffect(() => {
-    if (visible && calibrated) {
-      const timer = setTimeout(() => {
-        onDismiss();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, calibrated, onDismiss]);
-
-  // Bernoulli Lemniscate constants
+  // Figure-8 constants (using a modified Lemniscate of Bernoulli with a reduced denominator factor of 0.18 for a beautifully rounded but defined figure-8 shape)
   const cx = 150;
   const cy = 80;
   const scaleX = 90;
@@ -61,7 +51,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
 
   const animatedCircleProps = useAnimatedProps(() => {
     const t = animValue.value;
-    const denom = 1 + Math.pow(Math.sin(t), 2);
+    const denom = 1 + 0.08 * Math.pow(Math.sin(t), 2);
     const x = cx + (scaleX * Math.cos(t)) / denom;
     const y = cy + (scaleY * Math.sin(t) * Math.cos(t)) / denom;
 
@@ -71,12 +61,12 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
     };
   });
 
-  const generateLemniscatePath = () => {
+  const generateFigureEightPath = () => {
     let d = "";
     const steps = 100;
     for (let i = 0; i <= steps; i++) {
       const t = (i / steps) * 2 * Math.PI;
-      const denom = 1 + Math.pow(Math.sin(t), 2);
+      const denom = 1 + 0.08 * Math.pow(Math.sin(t), 2);
       const x = cx + (scaleX * Math.cos(t)) / denom;
       const y = cy + (scaleY * Math.sin(t) * Math.cos(t)) / denom;
       if (i === 0) {
@@ -89,7 +79,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
   };
 
   const handleDismiss = () => {
-    triggerHapticSelection();
+    triggerHaptics();
     onDismiss();
   };
 
@@ -102,11 +92,11 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
   return (
     <Dialog isOpen={visible} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
-        <DialogOverlayBlurView blurTargetRef={blurTargetRef} />
-        <Dialog.Overlay className="bg-transparent" />
+        {blurTargetRef && <DialogOverlayBlurView blurTargetRef={blurTargetRef} />}
+        <Dialog.Overlay className="bg-overlay/51" />
         <Dialog.Content
           className="self-center w-[90%] max-w-sm p-0 bg-background/25 border-0 shadow-none"
-          animation={{ entering: FlipInXUp, exiting: FlipOutXUp }}
+          animation={{ entering: FlipInXUp.duration(250), exiting: FlipOutXUp.duration(200) }}
         >
           <Card className="bg-surface/90 border border-border/25 p-6 rounded-3xl w-full gap-6 items-center shadow-2xl">
             {/* Header */}
@@ -118,18 +108,18 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
                 Make a figure 8 to calibrate your compass.
               </Typography.Heading>
               <Typography className="text-zinc-500 dark:text-zinc-400 text-sm text-center leading-relaxed px-4">
-                Keep your device away from metal (magnetic fields), and calibrate by waving your phone
-                in a figure-8 motion.
+                Keep your device away from metal (magnetic fields), and calibrate by waving your
+                phone in a figure-8 motion.
               </Typography>
             </View>
 
             {/* SVG Animated Figure-Eight */}
-            <View className="w-[300px] h-[160px] items-center justify-center bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl">
+            <View className="w-[300px] h-[160px] items-center justify-center bg-surface-secondary/25 border border-border/30 rounded-2xl">
               <Svg width="300" height="160" viewBox="0 0 300 160">
-                <G transform="rotate(-12, 150, 80)">
-                  {/* Background Lemniscate Path Track */}
+                <G transform="rotate(-20, 150, 80)">
+                  {/* Background Figure-Eight Path Track */}
                   <SvgPath
-                    d={generateLemniscatePath()}
+                    d={generateFigureEightPath()}
                     fill="none"
                     stroke={themeAccent}
                     strokeWidth="3"
@@ -159,7 +149,9 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
                 <Typography className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
                   Magnetic Field Value
                 </Typography>
-                <Typography className={`text-xs font-bold ${magneticField > 20 && magneticField < 65 ? "text-emerald-500" : "text-amber-500"}`}>
+                <Typography
+                  className={`text-xs font-bold ${magneticField > 20 && magneticField < 65 ? "text-emerald-500" : "text-amber-500"}`}
+                >
                   {Math.round(magneticField)}µT
                 </Typography>
               </View>
@@ -178,9 +170,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
               }}
               className="w-full border-transparent bg-transparent py-3 rounded-xl"
             >
-              <Button.Label
-                className="font-bold text-base text-center w-full text-accent"
-              >
+              <Button.Label className="font-bold text-base text-center w-full text-accent">
                 Done
               </Button.Label>
             </Button>

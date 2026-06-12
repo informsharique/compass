@@ -1,7 +1,7 @@
-import React from 'react';
-import { View } from 'react-native';
-import { Typography, Card } from 'heroui-native';
-import { LocationData } from '../../application/compass/use-compass-location';
+import React from "react";
+import { View } from "react-native";
+import { Typography, Card } from "heroui-native";
+import { LocationData } from "../../application/compass/use-compass-location";
 
 interface CompassDetailsProps {
   location: LocationData | null;
@@ -15,11 +15,11 @@ function formatDMS(deg: number, isLat: boolean): string {
   const minutes = Math.floor(minutesNotTruncated);
   const seconds = Math.floor((minutesNotTruncated - minutes) * 60);
 
-  let direction = '';
+  let direction = "";
   if (isLat) {
-    direction = deg >= 0 ? 'N' : 'S';
+    direction = deg >= 0 ? "N" : "S";
   } else {
-    direction = deg >= 0 ? 'E' : 'W';
+    direction = deg >= 0 ? "E" : "W";
   }
 
   return `${degrees}°${minutes}'${seconds}" ${direction}`;
@@ -29,14 +29,14 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
   const hasLoc = location && !location.error;
 
   return (
-    <Card className="bg-surface/61 border border-border/40 p-5 rounded-2xl w-full max-w-sm gap-4 shadow-2xl">
+    <Card className="bg-surface/80 border border-border/40 p-5 rounded-2xl w-full max-w-sm gap-4 shadow-2xl">
       {/* Header */}
       <View className="items-center border-b border-border/30 pb-2">
         <Typography className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">
-          {hasLoc && location.city ? 'Current Location' : 'Telemetry Details'}
+          {hasLoc && location.city ? "Current Location" : "Information Details"}
         </Typography>
         <Typography className="text-foreground text-base font-bold">
-          {hasLoc && location.city ? location.city : 'Compass Status'}
+          {hasLoc && location.city ? location.city : "Compass Status"}
         </Typography>
       </View>
 
@@ -47,7 +47,7 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
             Latitude
           </Typography>
           <Typography className="text-foreground text-sm font-semibold">
-            {hasLoc ? formatDMS(location.latitude, true) : '--'}
+            {hasLoc ? formatDMS(location.latitude, true) : "--"}
           </Typography>
         </View>
 
@@ -56,7 +56,7 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
             Longitude
           </Typography>
           <Typography className="text-foreground text-sm font-semibold">
-            {hasLoc ? formatDMS(location.longitude, false) : '--'}
+            {hasLoc ? formatDMS(location.longitude, false) : "--"}
           </Typography>
         </View>
       </View>
@@ -68,7 +68,7 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
             Altitude
           </Typography>
           <Typography className="text-foreground text-sm font-semibold">
-            {hasLoc && location.altitude !== null ? `${Math.round(location.altitude)} m` : '--'}
+            {hasLoc && location.altitude !== null ? `${Math.round(location.altitude)} m` : "--"}
           </Typography>
         </View>
 
@@ -77,7 +77,7 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
             Precision / Accuracy
           </Typography>
           <Typography className="text-foreground text-sm font-semibold">
-            {accuracy !== null ? `±${Math.round(accuracy)}°` : '--'}
+            {accuracy !== null ? `±${Math.round(accuracy)}°` : "--"}
           </Typography>
         </View>
       </View>
@@ -91,22 +91,21 @@ export const CompassDetails: React.FC<CompassDetailsProps> = ({ location, accura
           <View
             className={`w-2.5 h-2.5 rounded-full ${
               accuracy !== null && accuracy < 15
-                ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]'
+                ? "bg-emerald-500 shadow-[0_0_8px_#10b981]"
                 : accuracy !== null && accuracy < 45
-                ? 'bg-amber-500'
-                : 'bg-red-500'
+                  ? "bg-amber-500"
+                  : "bg-red-500"
             }`}
           />
           <Typography className="text-zinc-300 text-xs font-medium">
             {accuracy !== null && accuracy < 15
-              ? 'Calibrated'
+              ? "Calibrated"
               : accuracy !== null && accuracy < 45
-              ? 'Moderate'
-              : 'Uncalibrated'}
+                ? "Moderate"
+                : "Uncalibrated"}
           </Typography>
         </View>
       </View>
     </Card>
   );
 };
-

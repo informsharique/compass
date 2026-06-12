@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { Button, Typography } from 'heroui-native';
 import { applyAlpha } from './color-helper';
-import { triggerHapticSelection } from './haptic-helper';
+import { triggerHaptics } from './haptic-helper';
 
 interface CalibrationButtonProps {
   calibrated: boolean;
@@ -11,7 +11,7 @@ interface CalibrationButtonProps {
 
 export const CalibrationButton: React.FC<CalibrationButtonProps> = ({ calibrated, onPress }) => {
   const handlePress = () => {
-    triggerHapticSelection();
+    triggerHaptics();
     onPress();
   };
 
@@ -21,7 +21,7 @@ export const CalibrationButton: React.FC<CalibrationButtonProps> = ({ calibrated
         <View className="flex-row items-center justify-center py-2 px-4">
           <View className="w-2.5 h-2.5 rounded-full mr-2 bg-emerald-500" />
           <Typography className="font-medium text-zinc-500 dark:text-zinc-400 text-sm">
-            Compass calibrated
+            Compass Calibrated 
           </Typography>
         </View>
       ) : (

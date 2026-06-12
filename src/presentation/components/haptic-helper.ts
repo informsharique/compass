@@ -1,49 +1,10 @@
 import { Presets } from "react-native-pulsar";
+import { Platform } from "react-native";
 
-export const triggerHapticSelection = () => {
-  try {
-    Presets.System.selection();
-  } catch (e) {
-    console.log(e);
+export const triggerHaptics = () => {
+  if (Platform.OS === "android") {
+    Presets.System.Android.effectClick();
+    return;
   }
-};
-
-export const triggerHapticImpact = () => {
-  try {
-    Presets.System.impactLight();
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const triggerHapticNotification = () => {
-  try {
-    Presets.System.notificationSuccess();
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const triggerHapticThemeChange = () => {
-  try {
-    Presets.ripple();
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const triggerHapticColorChange = () => {
-  try {
-    Presets.spark();
-  } catch (e) {
-    console.log(e);
-  }
-};
-
-export const triggerHapticDesignChange = () => {
-  try {
-    Presets.combinationLock();
-  } catch (e) {
-    console.log(e);
-  }
+  Presets.System.impactMedium();
 };
