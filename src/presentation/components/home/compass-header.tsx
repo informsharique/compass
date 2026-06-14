@@ -2,18 +2,18 @@ import React from "react";
 import { Typography } from "heroui-native/text";
 import { Button } from "heroui-native/button";
 import { useThemeColor } from "heroui-native/hooks";
-import { Link, useNavigation } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Svg, { Circle, Path } from "react-native-svg";
 import { applyAlpha } from "@/presentation/utils/color-helper";
 import { triggerHaptics } from "@/presentation/utils/haptic-helper";
 
 export const CompassHeaderLeft: React.FC = () => {
 	const themeForeground = useThemeColor("foreground");
-	const navigation = useNavigation();
+	const router = useRouter();
 
 	const handleOpenInformation = () => {
 		triggerHaptics();
-		navigation.setParams({ isInformationOpen: "true" } as any);
+		router.setParams({ isInformationOpen: "true" });
 	};
 
 	return (
@@ -64,7 +64,7 @@ export const CompassHeaderRight: React.FC = () => {
 	const themeForeground = useThemeColor("foreground");
 
 	return (
-		<Link href={"/settings" as any} asChild>
+		<Link href="/settings" asChild>
 			<Button
 				size="sm"
 				variant="ghost"
