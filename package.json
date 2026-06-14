@@ -1,7 +1,39 @@
 {
 	"name": "compass",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"private": true,
+	"description": "A premium, high-performance, and beautifully designed mobile compass application built with React Native, Expo, and HeroUI Native.",
+	"author": {
+		"name": "Ahmad Shariq",
+		"email": "informsharique@gmail.com",
+		"url": "https://github.com/informsharique"
+	},
+	"contributors": [
+		{
+			"name": "Ahmad Shariq",
+			"email": "informsharique@gmail.com",
+			"url": "https://github.com/informsharique"
+		}
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/informsharique/compass.git"
+	},
+	"bugs": {
+		"url": "https://github.com/informsharique/compass/issues"
+	},
+	"homepage": "https://github.com/informsharique/compass#readme",
+	"keywords": [
+		"react-native",
+		"expo",
+		"compass",
+		"sensors",
+		"heroui-native",
+		"uniwind",
+		"tailwindcss",
+		"mobile-app"
+	],
 	"main": "expo-router/entry",
 	"scripts": {
 		"start": "expo start",
