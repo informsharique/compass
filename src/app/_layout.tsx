@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
 import { HeroUINativeProviderRaw } from "heroui-native/provider-raw";
 import type { JSX } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -14,20 +14,31 @@ function AppNavigator(): JSX.Element {
 	const { theme } = useUniwind();
 	const isDark = theme.includes("dark");
 
+	const navigationTheme = {
+		...(isDark ? DarkTheme : DefaultTheme),
+		colors: {
+			...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+			background: backgroundColor,
+		},
+	};
+
 	return (
-		<Stack
-			screenOptions={{
-				headerShown: false,
-				contentStyle: { backgroundColor },
-				statusBarStyle: isDark ? "light" : "dark",
-				statusBarAnimation: "fade",
-			}}
-		>
-			<Stack.Screen name="index" />
-			<Stack.Screen name="settings" options={{ presentation: "modal" }} />
-		</Stack>
+		<ThemeProvider value={navigationTheme}>
+			<Stack
+				screenOptions={{
+					headerShown: false,
+					contentStyle: { backgroundColor },
+					statusBarStyle: isDark ? "light" : "dark",
+					statusBarAnimation: "fade",
+				}}
+			>
+				<Stack.Screen name="index" />
+				<Stack.Screen name="settings" options={{ presentation: "modal" }} />
+			</Stack>
+		</ThemeProvider>
 	);
 }
+
 
 export default function RootLayout(): JSX.Element {
 	return (
