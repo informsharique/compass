@@ -1,90 +1,153 @@
-import { useState, useEffect, useRef } from 'react';
-import { Magnetometer, Accelerometer } from 'expo-sensors';
-import { CompassState } from '../../domain/compass/types';
-import { getCardinalDirection } from '../../domain/compass/heading-utils';
+import { useState, useEffect, useRef } from "react";
+import { Magnetometer, Accelerometer } from "expo-sensors";
+import { CompassState } from "@/domain/compass/types";
+import { getCardinalDirection } from "@/domain/compass/heading-utils";
+import { useSharedValue } from "react-native-reanimated";
 
 const MAGNETIC_FIELD_MAGNITUDE_LOW = 25;
 const MAGNETIC_FIELD_MAGNITUDE_HIGH = 70;
 
 export function useCompass() {
-  const [state, setState] = useState<CompassState>({
-    heading: null,
-    calibrated: false,
-  });
-  const [magneticField, setMagneticField] = useState<number>(0);
+	const [state, setState] = useState<CompassState>({
+		heading: null,
+		calibrated: false,
+	});
+	const [magneticField, setMagneticField] = useState<number>(0);
 
-  const lastAngle = useRef<number | null>(null);
-  const isFacingDown = useRef<boolean>(false);
+	const headingSV = useSharedValue(0);
 
-  useEffect(() => {
-    Magnetometer.setUpdateInterval(100);
-    Accelerometer.setUpdateInterval(100);
+	const lastAngle = useRef<number | null>(null);
+	const accelRef = useRef<{ x: number; y: number; z: number } | null>(null);
+	const magRef = useRef<{ x: number; y: number; z: number } | null>(null);
+	const lastUpdateRef = useRef<number>(0);
 
-    const accelSubscription = Accelerometer.addListener((data) => {
-      // z is negative when the phone screen is facing down
-      isFacingDown.current = data.z < 0;
-    });
+	useEffect(() => {
+		Magnetometer.setUpdateInterval(8);
+		Accelerometer.setUpdateInterval(8);
 
-    const magSubscription = Magnetometer.addListener((data) => {
-      const { x, y, z } = data;
+		const calculateHeading = () => {
+			if (!accelRef.current || !magRef.current) return;
 
-      // Invert target X orientation if the screen is facing down to prevent 180 degree shifts
-      const targetX = isFacingDown.current ? x : -x;
+			const ax = accelRef.current.x;
+			const ay = accelRef.current.y;
+			const az = accelRef.current.z;
 
-      // Calculate the raw heading angle
-      let rawAngle = Math.atan2(targetX, y) * (180 / Math.PI);
-      if (rawAngle < 0) {
-        rawAngle += 360;
-      }
+			const mx = magRef.current.x;
+			const my = magRef.current.y;
+			const mz = magRef.current.z;
 
-      let angle = rawAngle;
-      if (lastAngle.current !== null) {
-        // Find shortest angular difference (-180 to 180 degrees)
-        let diff = rawAngle - lastAngle.current;
-        while (diff < -180) diff += 360;
-        while (diff > 180) diff -= 360;
+			// Normalise accelerometer vector (gravity vector)
+			const a_norm = Math.sqrt(ax * ax + ay * ay + az * az);
+			if (a_norm === 0) return;
+			const ax_n = ax / a_norm;
+			const ay_n = ay / a_norm;
+			const az_n = az / a_norm;
 
-        const absDiff = Math.abs(diff);
-        let alpha = 0.1; // Slow filtering for small jitter (< 2 degrees)
+			// Calculate East vector E = M x A
+			// This is orthogonal to both gravity and the magnetic field
+			let ex = my * az_n - mz * ay_n;
+			let ey = mz * ax_n - mx * az_n;
+			let ez = mx * ay_n - my * ax_n;
 
-        if (absDiff > 10) {
-          alpha = 0.95; // Near-instant reaction for large movements (> 10 degrees)
-        } else if (absDiff > 2) {
-          // Smoothly transition alpha between 0.1 and 0.95
-          alpha = 0.1 + (0.85 * (absDiff - 2)) / 8;
-        }
+			// Normalise East vector
+			const e_norm = Math.sqrt(ex * ex + ey * ey + ez * ez);
+			if (e_norm === 0) return;
+			ex /= e_norm;
+			ey /= e_norm;
+			ez /= e_norm;
 
-        // Apply exponential moving average on the angle
-        angle = lastAngle.current + diff * alpha;
-        angle = (angle + 360) % 360;
-      }
+			// Calculate North vector N = A x E
+			// Since E is horizontal and A is vertical, N is a horizontal vector pointing magnetic North
+			let nx = ay_n * ez - az_n * ey;
+			let ny = az_n * ex - ax_n * ez;
+			let nz = ax_n * ey - ay_n * ex;
 
-      lastAngle.current = angle;
-      
-      const fieldStrength = Math.sqrt(x * x + y * y + z * z);
-      setMagneticField(fieldStrength);
+			// Normalise North vector
+			const n_norm = Math.sqrt(nx * nx + ny * ny + nz * nz);
+			if (n_norm === 0) return;
+			nx /= n_norm;
+			ny /= n_norm;
+			nz /= n_norm;
 
-      const heading = {
-        magneticHeading: angle,
-        trueHeading: angle, // Cannot determine true north natively from Magnetometer alone
-        headingAccuracy: fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW && fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH ? 10 : -1, // rough estimate based on Earth's magnetic field (25-65 µT)
-        cardinal: getCardinalDirection(angle),
-      };
+			// Calculate the heading angle in degrees (0 to 360)
+			// The device's forward direction is +Y (top of the phone).
+			// The angle in the horizontal plane between North (N) and the device's +Y direction is:
+			let rawAngle = Math.atan2(ey, ny) * (180 / Math.PI);
+			if (rawAngle < 0) {
+				rawAngle += 360;
+			}
 
-      setState({
-        heading,
-        calibrated: fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW && fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH,
-      });
-    });
+			let angle = rawAngle;
+			if (lastAngle.current !== null) {
+				// Find shortest angular difference (-180 to 180 degrees)
+				let diff = rawAngle - lastAngle.current;
+				while (diff < -180) diff += 360;
+				while (diff > 180) diff -= 360;
 
-    return () => {
-      accelSubscription.remove();
-      magSubscription.remove();
-    };
-  }, []);
+				const absDiff = Math.abs(diff);
+				let alpha = 0.08; // Smooth filter for slow/no rotation movement
 
-  return {
-    ...state,
-    magneticField,
-  };
+				if (absDiff > 15) {
+					alpha = 0.8; // Quick response for fast/large rotations
+				} else if (absDiff > 2) {
+					// Smooth interpolation between 0.08 and 0.8
+					alpha = 0.08 + (0.72 * (absDiff - 2)) / 13;
+				}
+
+				// Apply low-pass filter
+				angle = lastAngle.current + diff * alpha;
+				angle = (angle + 360) % 360;
+			}
+
+			lastAngle.current = angle;
+			headingSV.value = angle;
+
+			const fieldStrength = Math.sqrt(mx * mx + my * my + mz * mz);
+
+			const now = Date.now();
+			if (now - lastUpdateRef.current > 150) {
+				lastUpdateRef.current = now;
+				setMagneticField(fieldStrength);
+
+				const heading = {
+					magneticHeading: angle,
+					trueHeading: angle, // Cannot determine true north natively from Magnetometer alone
+					headingAccuracy:
+						fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW &&
+						fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH
+							? 10
+							: -1, // rough estimate based on Earth's magnetic field (25-65 µT)
+					cardinal: getCardinalDirection(angle),
+				};
+
+				setState({
+					heading,
+					calibrated:
+						fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW &&
+						fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH,
+				});
+			}
+		};
+
+		const accelSubscription = Accelerometer.addListener((data) => {
+			accelRef.current = data;
+			calculateHeading();
+		});
+
+		const magSubscription = Magnetometer.addListener((data) => {
+			magRef.current = data;
+			calculateHeading();
+		});
+
+		return () => {
+			accelSubscription.remove();
+			magSubscription.remove();
+		};
+	}, [headingSV]);
+
+	return {
+		...state,
+		magneticField,
+		headingSV,
+	};
 }

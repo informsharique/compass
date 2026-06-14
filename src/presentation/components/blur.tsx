@@ -1,9 +1,9 @@
-import type { View } from 'react-native';
-import { BlurTargetView as ExpoBlurTargetView, BlurView as ExpoBlurView } from 'expo-blur';
-import * as React from 'react';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import type { View } from "react-native";
+import { BlurTargetView as ExpoBlurTargetView, BlurView as ExpoBlurView } from "expo-blur";
+import * as React from "react";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
-import { useUniwind, withUniwind } from 'uniwind';
+import { useUniwind, withUniwind } from "uniwind";
 
 const BlurView = withUniwind(ExpoBlurView);
 export const BlurTargetView = withUniwind(ExpoBlurTargetView);
@@ -21,7 +21,7 @@ export function DialogOverlayBlurView({ blurTargetRef }: { blurTargetRef: blurTa
 			entering={FadeIn.duration(250)}
 			exiting={FadeOut.duration(200)}
 			intensity={20}
-			tint={theme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
+			tint={theme === "dark" ? "systemChromeMaterialDark" : "systemChromeMaterialLight"}
 			className="absolute inset-0"
 			blurMethod="dimezisBlurViewSdk31Plus"
 			blurTarget={blurTargetRef}
