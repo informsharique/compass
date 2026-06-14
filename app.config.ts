@@ -25,9 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	},
 	android: {
 		package: "com.sharique.compass",
-		permissions: [
-			"android.permission.HIGH_SAMPLING_RATE_SENSORS",
-		],
+		permissions: ["android.permission.HIGH_SAMPLING_RATE_SENSORS"],
 		adaptiveIcon: {
 			foregroundImage: "./assets/images/adaptive-icon.png",
 			backgroundImage: "./assets/images/android-icon-background.png",
@@ -42,11 +40,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			"expo-splash-screen",
 			{
 				image: "./assets/images/splash-icon-light.png",
-				resizeMode: "contain",
+				resizeMode: "native",
 				backgroundColor: "#FFFFFF",
 				dark: {
 					image: "./assets/images/splash-icon-dark.png",
 					backgroundColor: "#000000",
+					resizeMode: "native",
 				},
 				imageWidth: 200,
 			},

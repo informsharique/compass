@@ -64,7 +64,6 @@ function AppNavigator(): JSX.Element {
 						<Stack.Screen
 							name="settings"
 							options={{
-								presentation: "modal",
 								headerShown: true,
 								headerTitle: "",
 								headerStyle: { backgroundColor },
