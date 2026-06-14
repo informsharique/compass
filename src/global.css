@@ -51,9 +51,9 @@
 	}
 
 	@variant dark {
-		--background: hsl(240, 10%, 3.9%);
+		--background: hsl(240, 10%, 1.5%);
 		--foreground: hsl(0, 0%, 98%);
-		--surface: hsl(240, 10%, 10%);
+		--surface: hsl(240, 10%, 5%);
 		--surface-foreground: hsl(0, 0%, 98%);
 		--accent: hsl(180, 100%, 50%);
 		--accent-foreground: hsl(240, 10%, 3.9%);
@@ -139,9 +139,9 @@
 		--theme-emerald: hsl(142, 72%, 29%);
 	}
 	@variant cyan-dark {
-		--background: hsl(240, 10%, 3.9%);
+		--background: hsl(240, 10%, 1.5%);
 		--foreground: hsl(0, 0%, 98%);
-		--surface: hsl(240, 10%, 8%);
+		--surface: hsl(240, 10%, 5%);
 		--surface-foreground: hsl(0, 0%, 98%);
 		--accent: hsl(180, 100%, 50%);
 		--accent-foreground: hsl(240, 10%, 3.9%);
@@ -227,9 +227,9 @@
 		--theme-emerald: hsl(142, 72%, 29%);
 	}
 	@variant amber-dark {
-		--background: hsl(20, 10%, 5%);
+		--background: hsl(20, 10%, 1.5%);
 		--foreground: hsl(40, 20%, 95%);
-		--surface: hsl(20, 10%, 12%);
+		--surface: hsl(20, 10%, 5%);
 		--surface-foreground: hsl(40, 20%, 95%);
 		--accent: hsl(45, 93%, 47%);
 		--accent-foreground: hsl(20, 10%, 5%);
@@ -315,9 +315,9 @@
 		--theme-emerald: hsl(142, 72%, 29%);
 	}
 	@variant crimson-dark {
-		--background: hsl(346, 40%, 6%);
+		--background: hsl(346, 40%, 1.5%);
 		--foreground: hsl(346, 20%, 96%);
-		--surface: hsl(346, 30%, 12%);
+		--surface: hsl(346, 20%, 5%);
 		--surface-foreground: hsl(346, 20%, 96%);
 		--accent: hsl(346, 84%, 60%);
 		--accent-foreground: hsl(346, 40%, 6%);
@@ -403,9 +403,9 @@
 		--theme-emerald: hsl(142, 72%, 29%);
 	}
 	@variant emerald-dark {
-		--background: hsl(140, 25%, 5%);
+		--background: hsl(140, 25%, 1.5%);
 		--foreground: hsl(140, 15%, 95%);
-		--surface: hsl(140, 20%, 10%);
+		--surface: hsl(140, 15%, 5%);
 		--surface-foreground: hsl(140, 15%, 95%);
 		--accent: hsl(142, 70%, 45%);
 		--accent-foreground: hsl(140, 25%, 5%);

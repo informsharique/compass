@@ -1,18 +1,33 @@
-import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from "expo-router";
+import { Stack, ThemeProvider, DarkTheme, DefaultTheme, router } from "expo-router";
 import { HeroUINativeProviderRaw } from "heroui-native/provider-raw";
-import type { JSX } from "react";
+import { type JSX, useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SettingsProvider } from "@/domain/settings/settings-store";
+import * as SystemUI from "expo-system-ui";
 
 import "../global.css";
 import { useUniwind } from "uniwind";
 import { useThemeColor } from "heroui-native/hooks";
 import { PortalHost } from "heroui-native/portal";
+import { StyleSheet, View } from "react-native";
+import { SettingsHeader } from "@/presentation/components/settings/settings-header";
+import {
+	CompassHeaderLeft,
+	CompassHeaderTitle,
+	CompassHeaderRight,
+} from "@/presentation/components/home/compass-header";
+import { BlurTargetContext, BlurTargetView } from "@/presentation/components/blur";
 
 function AppNavigator(): JSX.Element {
 	const backgroundColor = useThemeColor("background");
 	const { theme } = useUniwind();
 	const isDark = theme.includes("dark");
+	const blurTargetRef = useRef<View>(null);
+
+	useEffect(() => {
+		if (backgroundColor) {
+			SystemUI.setBackgroundColorAsync(backgroundColor).catch(() => {});
+		}
+	}, [backgroundColor]);
 
 	const navigationTheme = {
 		...(isDark ? DarkTheme : DefaultTheme),
@@ -24,31 +39,59 @@ function AppNavigator(): JSX.Element {
 
 	return (
 		<ThemeProvider value={navigationTheme}>
-			<Stack
-				screenOptions={{
-					headerShown: false,
-					contentStyle: { backgroundColor },
-					statusBarStyle: isDark ? "light" : "dark",
-					statusBarAnimation: "fade",
-				}}
-			>
-				<Stack.Screen name="index" />
-				<Stack.Screen name="settings" options={{ presentation: "modal" }} />
-			</Stack>
+			<BlurTargetContext value={blurTargetRef}>
+				<BlurTargetView ref={blurTargetRef} className="flex-1">
+					<Stack
+						screenOptions={{
+							headerShown: false,
+							contentStyle: { backgroundColor },
+							statusBarStyle: isDark ? "light" : "dark",
+							statusBarAnimation: "fade",
+						}}
+					>
+						<Stack.Screen
+							name="index"
+							options={{
+								headerShown: true,
+								headerTitle: () => <CompassHeaderTitle />,
+								headerTitleAlign: "center",
+								headerStyle: { backgroundColor },
+								headerShadowVisible: false,
+								headerLeft: () => <CompassHeaderLeft />,
+								headerRight: () => <CompassHeaderRight />,
+							}}
+						/>
+						<Stack.Screen
+							name="settings"
+							options={{
+								presentation: "modal",
+								headerShown: true,
+								headerTitle: "",
+								headerStyle: { backgroundColor },
+								headerShadowVisible: false,
+								headerLeft: () => <SettingsHeader onClose={() => router.back()} />,
+							}}
+						/>
+					</Stack>
+				</BlurTargetView>
+			</BlurTargetContext>
 		</ThemeProvider>
 	);
 }
 
-
 export default function RootLayout(): JSX.Element {
 	return (
-		<GestureHandlerRootView style={{ flex: 1 }}>
-			<SettingsProvider>
-				<HeroUINativeProviderRaw>
-					<AppNavigator />
-					<PortalHost />
-				</HeroUINativeProviderRaw>
-			</SettingsProvider>
+		<GestureHandlerRootView style={styles.container}>
+			<HeroUINativeProviderRaw>
+				<AppNavigator />
+				<PortalHost />
+			</HeroUINativeProviderRaw>
 		</GestureHandlerRootView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+});

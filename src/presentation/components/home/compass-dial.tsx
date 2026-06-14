@@ -21,8 +21,9 @@ import Animated, {
 import { useThemeColor } from "heroui-native/hooks";
 import { PressableFeedback } from "heroui-native/pressable-feedback";
 import { useSettings } from "@/domain/settings/settings-store";
-import { triggerHaptics } from "@/presentation/components/haptic-helper";
-import { applyAlpha } from "@/presentation/components/color-helper";
+import { triggerHaptics } from "@/presentation/utils/haptic-helper";
+import { applyAlpha } from "@/presentation/utils/color-helper";
+import { Typography } from "heroui-native/text";
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
@@ -56,9 +57,10 @@ const UprightText: React.FC<UprightTextProps> = ({ x, y, rotation, children, ...
 
 interface CompassDialProps {
 	headingSV: SharedValue<number>;
+	heading?: number;
 }
 
-export const CompassDial: React.FC<CompassDialProps> = ({ headingSV }) => {
+export const CompassDial: React.FC<CompassDialProps> = ({ headingSV, heading }) => {
 	const { compassDesign } = useSettings();
 	const rotation = useSharedValue(0);
 
@@ -529,6 +531,86 @@ export const CompassDial: React.FC<CompassDialProps> = ({ headingSV }) => {
 		);
 	};
 
+	const renderStandardDial = () => {
+		const ticks = [];
+		for (let i = 0; i < 360; i += 2) {
+			const isMajor30 = i % 30 === 0;
+			const isMajor10 = i % 10 === 0;
+			
+			const length = isMajor30 ? 16 : isMajor10 ? 10 : 6;
+			const strokeWidth = isMajor30 ? 2 : isMajor10 ? 1.5 : 1;
+			
+			const color = isMajor30
+				? i === 0
+					? accentColor
+					: foregroundColor
+				: isMajor10
+					? applyAlpha(foregroundColor, "65%")
+					: applyAlpha(foregroundColor, "30%");
+
+			ticks.push(
+				<Line
+					key={`tick-standard-${i}`}
+					x1={center}
+					y1={center - radius}
+					x2={center}
+					y2={center - radius + length}
+					stroke={color}
+					strokeWidth={strokeWidth}
+					transform={`rotate(${i}, ${center}, ${center})`}
+				/>
+			);
+		}
+
+		const labels = [
+			{ angle: 0, text: "N", isCardinal: true, isNorth: true },
+			{ angle: 30, text: "30" },
+			{ angle: 60, text: "60" },
+			{ angle: 90, text: "E", isCardinal: true },
+			{ angle: 120, text: "120" },
+			{ angle: 150, text: "150" },
+			{ angle: 180, text: "S", isCardinal: true },
+			{ angle: 210, text: "210" },
+			{ angle: 240, text: "240" },
+			{ angle: 270, text: "W", isCardinal: true },
+			{ angle: 300, text: "300" },
+			{ angle: 330, text: "330" },
+		];
+
+		const labelElements = labels.map((lbl) => {
+			const color = lbl.isNorth
+				? accentColor
+				: lbl.isCardinal
+					? foregroundColor
+					: applyAlpha(foregroundColor, "60%");
+			const fontSize = lbl.isCardinal ? "22" : "14";
+			const fontWeight = "bold";
+
+			return (
+				<G key={`label-standard-${lbl.angle}`} transform={`rotate(${lbl.angle}, ${center}, ${center})`}>
+					<SvgText
+						x={center}
+						y={center - radius + 38}
+						fill={color}
+						fontSize={fontSize}
+						fontWeight={fontWeight}
+						textAnchor="middle"
+						alignmentBaseline="middle"
+					>
+						{lbl.text}
+					</SvgText>
+				</G>
+			);
+		});
+
+		return (
+			<G>
+				{ticks}
+				{labelElements}
+			</G>
+		);
+	};
+
 	return (
 		<PressableFeedback
 			onPress={handlePress}
@@ -561,22 +643,35 @@ export const CompassDial: React.FC<CompassDialProps> = ({ headingSV }) => {
 					{compassDesign === "classic" && renderClassicDial()}
 					{compassDesign === "modern" && renderModernDial()}
 					{compassDesign === "minimalist" && renderMinimalistDial()}
+					{compassDesign === "standard" && renderStandardDial()}
 				</Svg>
 			</Animated.View>
+
+			{/* Center Heading Readout Overlay for Standard Dial */}
+			{compassDesign === "standard" && (
+				<View className="absolute inset-0 items-center justify-center pointer-events-none">
+					<Typography.Heading
+						type="h2"
+						className="text-4xl sm:text-5xl font-black text-foreground tabular-nums tracking-tighter"
+					>
+						{heading !== undefined ? `${heading}°` : "0°"}
+					</Typography.Heading>
+				</View>
+			)}
 
 			{/* Stationary Top Marker Overlay */}
 			<View className="absolute inset-0 items-center pointer-events-none">
 				<Svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
 					<Polygon
 						points={`${center - 8},14 ${center + 8},14 ${center},26`}
-						fill="#ef4444"
+						fill={accentColor}
 					/>
 					<Line
 						x1={center}
 						y1="0"
 						x2={center}
 						y2="14"
-						stroke="#ef4444"
+						stroke={accentColor}
 						strokeWidth="2.5"
 					/>
 				</Svg>

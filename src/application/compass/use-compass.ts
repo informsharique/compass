@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Magnetometer, Accelerometer } from "expo-sensors";
-import { CompassState } from "@/domain/compass/types";
+import { CompassState, Heading } from "@/domain/compass/types";
 import { getCardinalDirection } from "@/domain/compass/heading-utils";
 import { useSharedValue } from "react-native-reanimated";
+import { useIsFocused } from "expo-router";
 
 const MAGNETIC_FIELD_MAGNITUDE_LOW = 25;
 const MAGNETIC_FIELD_MAGNITUDE_HIGH = 70;
 
 export function useCompass() {
-	const [state, setState] = useState<CompassState>({
+	const isFocused = useIsFocused();
+	const [state, setState] = useState<CompassState & { magneticField: number }>({
 		heading: null,
 		calibrated: false,
+		magneticField: 0,
 	});
-	const [magneticField, setMagneticField] = useState<number>(0);
 
 	const headingSV = useSharedValue(0);
 
@@ -22,8 +24,10 @@ export function useCompass() {
 	const lastUpdateRef = useRef<number>(0);
 
 	useEffect(() => {
-		Magnetometer.setUpdateInterval(8);
-		Accelerometer.setUpdateInterval(8);
+		if (!isFocused) return;
+
+		Magnetometer.setUpdateInterval(16);
+		Accelerometer.setUpdateInterval(16);
 
 		const calculateHeading = () => {
 			if (!accelRef.current || !magRef.current) return;
@@ -102,14 +106,12 @@ export function useCompass() {
 			lastAngle.current = angle;
 			headingSV.value = angle;
 
-			const fieldStrength = Math.sqrt(mx * mx + my * my + mz * mz);
-
 			const now = Date.now();
 			if (now - lastUpdateRef.current > 150) {
 				lastUpdateRef.current = now;
-				setMagneticField(fieldStrength);
+				const fieldStrength = Math.sqrt(mx * mx + my * my + mz * mz);
 
-				const heading = {
+				const heading: Heading = {
 					magneticHeading: angle,
 					trueHeading: angle, // Cannot determine true north natively from Magnetometer alone
 					headingAccuracy:
@@ -120,11 +122,14 @@ export function useCompass() {
 					cardinal: getCardinalDirection(angle),
 				};
 
+				const calibrated =
+					fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW &&
+					fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH;
+
 				setState({
 					heading,
-					calibrated:
-						fieldStrength > MAGNETIC_FIELD_MAGNITUDE_LOW &&
-						fieldStrength < MAGNETIC_FIELD_MAGNITUDE_HIGH,
+					calibrated,
+					magneticField: fieldStrength,
 				});
 			}
 		};
@@ -143,11 +148,11 @@ export function useCompass() {
 			accelSubscription.remove();
 			magSubscription.remove();
 		};
-	}, [headingSV]);
+	}, [isFocused, headingSV]);
 
 	return {
 		...state,
-		magneticField,
 		headingSV,
 	};
 }
+

@@ -2,9 +2,9 @@ import React, { use } from "react";
 import { View } from "react-native";
 import { Dialog } from "heroui-native/dialog";
 import { useThemeColor } from "heroui-native/hooks";
-import { CompassDetails } from "@/presentation/components/compass-details";
+import { CompassDetails } from "@/presentation/components/home/compass-details";
 import { LocationData } from "@/application/compass/use-compass-location";
-import { applyAlpha } from "@/presentation/components/color-helper";
+import { applyAlpha } from "@/presentation/utils/color-helper";
 import { FlipInXUp, FlipOutXUp } from "react-native-reanimated";
 import { BlurTargetContext, DialogOverlayBlurView } from "@/presentation/components/blur";
 

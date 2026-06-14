@@ -2,10 +2,8 @@ import { useState, type JSX } from "react";
 import { View, ScrollView } from "react-native";
 import { Typography } from "heroui-native/text";
 import { Card } from "heroui-native/card";
-import { Button } from "heroui-native/button";
 import { useThemeColor } from "heroui-native/hooks";
 import { PressableFeedback } from "heroui-native/pressable-feedback";
-import { Stack, useRouter } from "expo-router";
 import { useCSSVariable } from "uniwind";
 import Constants from "expo-constants";
 import {
@@ -14,125 +12,31 @@ import {
 	CompassDesign,
 	AppearanceMode,
 } from "@/domain/settings/settings-store";
-import { triggerHaptics } from "@/presentation/components/haptic-helper";
-import Svg, { Path } from "react-native-svg";
-import { applyAlpha } from "@/presentation/components/color-helper";
+import { AppearanceButton } from "@/presentation/components/settings/appearance-button";
+import { ColorSelectionDot } from "@/presentation/components/settings/color-selection-dot";
+import { triggerHaptics } from "@/presentation/utils/haptic-helper";
+import { applyAlpha } from "@/presentation/utils/color-helper";
 import Animated, {
 	useAnimatedReaction,
 	useAnimatedStyle,
 	useSharedValue,
 	withSpring,
-	withTiming,
 } from "react-native-reanimated";
 
 import SunIcon from "@/assets/icons/sun.svg";
 import MoonIcon from "@/assets/icons/moon.svg";
 import SystemIcon from "@/assets/icons/system.svg";
 
-function ColorSelectionDot({
-	color,
-	isSelected,
-	onPress,
-	resolvedAppearanceMode,
-	themeForeground,
-}: {
-	color: { id: ThemeColor; name: string; hex: string };
-	isSelected: boolean;
-	onPress: () => void;
-	resolvedAppearanceMode: string;
-	themeForeground: string;
-}) {
-	const scale = useSharedValue(isSelected ? 1 : 0.6);
-	const opacity = useSharedValue(isSelected ? 1 : 0);
-
-	useAnimatedReaction(
-		() => isSelected,
-		(nextIsSelected) => {
-			scale.value = withSpring(nextIsSelected ? 1 : 0.6, {
-				damping: 15,
-				stiffness: 220,
-				mass: 0.6,
-			});
-			opacity.value = withTiming(nextIsSelected ? 1 : 0, { duration: 120 });
-		}
-	);
-
-	const ringStyle = useAnimatedStyle(() => {
-		return {
-			transform: [{ scale: scale.value }],
-			opacity: opacity.value,
-		};
-	});
-
-	return (
-		<View style={{ width: 56, height: 56, alignItems: "center", justifyContent: "center" }}>
-			{/* Outer Ring Animated */}
-			<Animated.View
-				style={[
-					ringStyle,
-					{
-						position: "absolute",
-						width: 56,
-						height: 56,
-						borderRadius: 28,
-						borderWidth: 2,
-						borderColor:
-							resolvedAppearanceMode === "dark"
-								? applyAlpha(themeForeground, "80%")
-								: applyAlpha(themeForeground, "25%"),
-					},
-				]}
-			/>
-
-			<PressableFeedback
-				onPress={onPress}
-				animation={{
-					scale: {
-						value: isSelected ? 0.95 : 1,
-					},
-				}}
-				style={{
-					width: 44,
-					height: 44,
-					borderRadius: 22,
-					backgroundColor: color.hex,
-					alignItems: "center",
-					justifyContent: "center",
-					boxShadow: isSelected ? `0 0 12px ${color.hex}` : "0 2px 4px rgba(0,0,0,0.1)",
-				}}
-			>
-				<PressableFeedback.Ripple
-					animation={{
-						backgroundColor: { value: applyAlpha(color.hex, "20%") },
-					}}
-				/>
-				{isSelected && (
-					<Svg
-						width="18"
-						height="18"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke={
-							color.id === "amber" && resolvedAppearanceMode === "light"
-								? "#000000"
-								: "#ffffff"
-						}
-						strokeWidth="3"
-					>
-						<Path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
-					</Svg>
-				)}
-			</PressableFeedback>
-		</View>
-	);
-}
+const APPEARANCE_OPTIONS = [
+	{ id: "system" as AppearanceMode, label: "System", Icon: SystemIcon },
+	{ id: "light" as AppearanceMode, label: "Light", Icon: SunIcon },
+	{ id: "dark" as AppearanceMode, label: "Dark", Icon: MoonIcon },
+];
 
 export default function SettingsScreen(): JSX.Element {
-	const router = useRouter();
 	const themeForeground = useThemeColor("foreground");
 	const themeAccent = useThemeColor("accent");
 	const themeMuted = useThemeColor("muted");
-	const themeBackground = useThemeColor("background");
 
 	const {
 		themeColor,
@@ -187,11 +91,6 @@ export default function SettingsScreen(): JSX.Element {
 		},
 	];
 
-	const handleClose = () => {
-		triggerHaptics();
-		router.back();
-	};
-
 	const handleSelectColor = (color: ThemeColor) => {
 		triggerHaptics();
 		setThemeColor(color);
@@ -224,61 +123,6 @@ export default function SettingsScreen(): JSX.Element {
 
 	return (
 		<View className="flex-1 bg-background">
-			<Stack.Screen
-				options={{
-					headerShown: true,
-					headerTitle: "",
-					headerStyle: { backgroundColor: themeBackground },
-					headerShadowVisible: false,
-					headerLeft: () => (
-						<View className="flex-row items-center gap-1">
-							<Button
-								size="sm"
-								variant="ghost"
-								onPress={handleClose}
-								feedbackVariant="scale"
-								animation={{
-									scale: {
-										value: 1,
-									},
-								}}
-								android_ripple={{
-									color: applyAlpha(themeForeground, "20%"),
-									foreground: true,
-								}}
-								className="w-10 h-10 p-0 items-center justify-center rounded-full bg-surface-secondary/51 border border-border/10"
-							>
-								<Svg
-									width="20"
-									height="20"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke={themeForeground}
-									strokeWidth="2.5"
-								>
-									<Path
-										d="M15 19l-7-7 7-7"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									/>
-								</Svg>
-							</Button>
-							<View className="flex-col gap-0.25">
-								<Typography.Heading
-									type="h2"
-									className="text-xl font-bold text-foreground leading-tight"
-								>
-									Settings
-								</Typography.Heading>
-								<Typography.Paragraph className="text-zinc-500 text-sm leading-tight">
-									Configure your compass preferences
-								</Typography.Paragraph>
-							</View>
-						</View>
-					),
-				}}
-			/>
-
 			<ScrollView
 				contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 20, paddingTop: 20 }}
 				showsVerticalScrollIndicator={false}
@@ -296,92 +140,18 @@ export default function SettingsScreen(): JSX.Element {
 							<Animated.View style={indicatorStyle} className="rounded-xl" />
 						)}
 
-						{/* System */}
-						<PressableFeedback
-							onPress={() => handleSelectAppearance("system")}
-							animation={{
-								scale: {
-									value: 1,
-								},
-							}}
-							className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl gap-1.5 bg-transparent border border-transparent"
-						>
-							<PressableFeedback.Ripple
-								animation={{
-									backgroundColor: { value: applyAlpha(themeForeground, "20%") },
-								}}
+						{APPEARANCE_OPTIONS.map(({ id, label, Icon }) => (
+							<AppearanceButton
+								key={id}
+								label={label}
+								Icon={Icon}
+								isActive={appearanceMode === id}
+								onPress={() => handleSelectAppearance(id)}
+								themeAccent={themeAccent}
+								themeMuted={themeMuted}
+								themeForeground={themeForeground}
 							/>
-							<SystemIcon
-								width={16}
-								height={16}
-								color={appearanceMode === "system" ? themeAccent : themeMuted}
-							/>
-							<Typography
-								className={`text-xs font-semibold ${
-									appearanceMode === "system" ? "text-accent" : "text-zinc-500"
-								}`}
-							>
-								System
-							</Typography>
-						</PressableFeedback>
-
-						{/* Light */}
-						<PressableFeedback
-							onPress={() => handleSelectAppearance("light")}
-							animation={{
-								scale: {
-									value: 1,
-								},
-							}}
-							className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl gap-1.5 bg-transparent border border-transparent"
-						>
-							<PressableFeedback.Ripple
-								animation={{
-									backgroundColor: { value: applyAlpha(themeForeground, "20%") },
-								}}
-							/>
-							<SunIcon
-								width={16}
-								height={16}
-								color={appearanceMode === "light" ? themeAccent : themeMuted}
-							/>
-							<Typography
-								className={`text-xs font-semibold ${
-									appearanceMode === "light" ? "text-accent" : "text-zinc-500"
-								}`}
-							>
-								Light
-							</Typography>
-						</PressableFeedback>
-
-						{/* Dark */}
-						<PressableFeedback
-							onPress={() => handleSelectAppearance("dark")}
-							animation={{
-								scale: {
-									value: 1,
-								},
-							}}
-							className="flex-1 flex-row items-center justify-center py-2.5 rounded-xl gap-1.5 bg-transparent border border-transparent"
-						>
-							<PressableFeedback.Ripple
-								animation={{
-									backgroundColor: { value: applyAlpha(themeForeground, "20%") },
-								}}
-							/>
-							<MoonIcon
-								width={16}
-								height={16}
-								color={appearanceMode === "dark" ? themeAccent : themeMuted}
-							/>
-							<Typography
-								className={`text-xs font-semibold ${
-									appearanceMode === "dark" ? "text-accent" : "text-zinc-500"
-								}`}
-							>
-								Dark
-							</Typography>
-						</PressableFeedback>
+						))}
 					</View>
 				</View>
 
@@ -421,6 +191,11 @@ export default function SettingsScreen(): JSX.Element {
 					</Typography>
 					<Card className="p-2 rounded-2xl bg-surface/40 border border-border/10 gap-1">
 						{[
+							{
+								id: "standard" as CompassDesign,
+								title: "Standard Compass",
+								desc: "iOS-style clean layout with dense graduation ticks",
+							},
 							{
 								id: "classic" as CompassDesign,
 								title: "Classic Rose",
