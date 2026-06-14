@@ -1,57 +1,57 @@
 {
-  "cli": {
-    "version": ">= 16.0.1",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "production": {
-      "autoIncrement": true,
-      "distribution": "store",
-      "environment": "production",
-      "ios": {
-        "image": "latest"
-      },
-      "android": {
-        "buildType": "apk",
-        "image": "latest",
-        "gradleCommand": ":app:assembleRelease -x lint -x lintVitalAnalyzeRelease"
-      },
-      "env": {
-        "EAS_GRADLE_CACHE": "1",
-        "EXPO_PUBLIC_APP_ENV": "production"
-      }
-    },
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "environment": "development",
-      "ios": {
-        "image": "latest"
-      },
-      "android": {
-        "image": "latest"
-      },
-      "env": {
-        "EAS_GRADLE_CACHE": "1",
-        "EXPO_PUBLIC_APP_ENV": "development"
-      }
-    },
-    "simulator": {
-      "environment": "development",
-      "ios": {
-        "simulator": true,
-        "image": "latest"
-      },
-      "android": {
-        "image": "latest"
-      },
-      "env": {
-        "EXPO_PUBLIC_APP_ENV": "development"
-      }
-    }
-  },
-  "submit": {
-    "production": {},
-    "development": {}
-  }
+	"cli": {
+		"version": ">= 16.0.1",
+		"appVersionSource": "remote"
+	},
+	"build": {
+		"production": {
+			"autoIncrement": true,
+			"distribution": "store",
+			"environment": "production",
+			"ios": {
+				"image": "latest"
+			},
+			"android": {
+				"buildType": "apk",
+				"image": "latest",
+				"gradleCommand": ":app:assembleRelease -x lint -x lintVitalAnalyzeRelease"
+			},
+			"env": {
+				"EAS_GRADLE_CACHE": "1",
+				"EXPO_PUBLIC_APP_ENV": "production"
+			}
+		},
+		"development": {
+			"developmentClient": true,
+			"distribution": "internal",
+			"environment": "development",
+			"ios": {
+				"image": "latest"
+			},
+			"android": {
+				"image": "latest"
+			},
+			"env": {
+				"EAS_GRADLE_CACHE": "1",
+				"EXPO_PUBLIC_APP_ENV": "development"
+			}
+		},
+		"simulator": {
+			"environment": "development",
+			"ios": {
+				"simulator": true,
+				"image": "latest"
+			},
+			"android": {
+				"image": "latest"
+			},
+			"env": {
+				"EXPO_PUBLIC_APP_ENV": "development"
+			}
+		}
+	},
+	"submit": {
+		"production": {},
+		"development": {}
+	}
 }
