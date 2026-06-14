@@ -16,21 +16,26 @@ import Animated, {
 	FlipOutXUp,
 } from "react-native-reanimated";
 import Svg, { Circle, Path as SvgPath, G } from "react-native-svg";
-import { triggerHaptics } from "@/presentation/components/haptic-helper";
-import { applyAlpha } from "@/presentation/components/color-helper";
-import { useCompass } from "@/application/compass/use-compass";
+import { triggerHaptics } from "@/presentation/utils/haptic-helper";
+import { applyAlpha } from "@/presentation/utils/color-helper";
 
 interface CompassCalibrationProps {
 	visible: boolean;
 	onDismiss: () => void;
+	calibrated: boolean;
+	magneticField: number;
 }
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible, onDismiss }) => {
+export const CompassCalibration: React.FC<CompassCalibrationProps> = ({
+	visible,
+	onDismiss,
+	calibrated,
+	magneticField,
+}) => {
 	const animValue = useSharedValue(0);
 	const themeAccent = useThemeColor("accent");
-	const { calibrated, magneticField } = useCompass();
 	const blurTargetRef = use(BlurTargetContext);
 
 	useEffect(() => {
@@ -87,14 +92,8 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
 		onDismiss();
 	};
 
-	const handleOpenChange = (open: boolean) => {
-		if (!open) {
-			handleDismiss();
-		}
-	};
-
 	return (
-		<Dialog isOpen={visible} onOpenChange={handleOpenChange}>
+		<Dialog isOpen={visible} onOpenChange={onDismiss}>
 			<Dialog.Portal>
 				{blurTargetRef && <DialogOverlayBlurView blurTargetRef={blurTargetRef} />}
 				<Dialog.Overlay className="bg-overlay/51" />
@@ -116,7 +115,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({ visible,
 							</Typography.Heading>
 							<Typography className="text-zinc-500 dark:text-zinc-400 text-sm text-center leading-relaxed px-4">
 								Keep your device away from metal (magnetic fields), and calibrate by
-								waving your phone in a figure-8 motion.
+								waving your phone in a figure-8 motion 3 times.
 							</Typography>
 						</View>
 

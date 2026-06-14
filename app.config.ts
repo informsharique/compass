@@ -25,6 +25,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	},
 	android: {
 		package: "com.sharique.compass",
+		permissions: [
+			"android.permission.HIGH_SAMPLING_RATE_SENSORS",
+		],
 		adaptiveIcon: {
 			foregroundImage: "./assets/images/adaptive-icon.png",
 			backgroundImage: "./assets/images/android-icon-background.png",

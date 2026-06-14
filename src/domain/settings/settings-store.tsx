@@ -1,71 +1,111 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Uniwind } from "uniwind";
-import { useColorScheme } from "react-native";
+import { useState, useEffect } from "react";
+import { createMMKV } from "react-native-mmkv";
+import { Uniwind, useUniwind } from "uniwind";
+import { Appearance } from "react-native";
+
+export const storage = createMMKV();
 
 export type ThemeColor = "cyan" | "amber" | "crimson" | "emerald";
-export type CompassDesign = "classic" | "modern" | "minimalist";
+export type CompassDesign = "classic" | "modern" | "minimalist" | "standard";
 export type AppearanceMode = "light" | "dark" | "system";
 
-interface SettingsContextProps {
-	themeColor: ThemeColor;
-	compassDesign: CompassDesign;
-	appearanceMode: AppearanceMode;
-	resolvedAppearanceMode: "light" | "dark";
-	setThemeColor: (color: ThemeColor) => void;
-	setCompassDesign: (design: CompassDesign) => void;
-	setAppearanceMode: (mode: AppearanceMode) => void;
-}
+const COLOR_KEY = "settings.themeColor";
+const DESIGN_KEY = "settings.compassDesign";
+const APPEARANCE_KEY = "settings.appearanceMode";
 
-const SettingsContext = createContext<SettingsContextProps | undefined>(undefined);
+// Getter helper functions
+export const getThemeColor = (): ThemeColor => (storage.getString(COLOR_KEY) as ThemeColor) || "cyan";
+export const getCompassDesign = (): CompassDesign => (storage.getString(DESIGN_KEY) as CompassDesign) || "standard";
+export const getAppearanceMode = (): AppearanceMode => (storage.getString(APPEARANCE_KEY) as AppearanceMode) || "system";
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const systemColorScheme = useColorScheme();
-	const [themeColor, setThemeColorState] = useState<ThemeColor>("cyan");
-	const [compassDesign, setCompassDesign] = useState<CompassDesign>("classic");
-	const [appearanceMode, setAppearanceModeState] = useState<AppearanceMode>("system");
+// Synchronize theme in Uniwind using CSS-defined themes and Uniwind's theme resolution
+export const syncTheme = () => {
+	const color = getThemeColor();
+	const mode = getAppearanceMode();
 
-	const resolvedAppearanceMode =
-		appearanceMode === "system"
-			? systemColorScheme === "light"
-				? "light"
-				: "dark"
-			: appearanceMode;
+	let resolvedMode: "light" | "dark";
+	if (mode === "system") {
+		// Leverage Uniwind to check and resolve the system color scheme
+		Uniwind.setTheme("system");
+		resolvedMode = Uniwind.currentTheme.includes("dark") ? "dark" : "light";
+	} else {
+		resolvedMode = mode;
+	}
 
-	// Synchronize Uniwind theme whenever color or mode changes
-	useEffect(() => {
-		const combinedTheme = `${themeColor}-${resolvedAppearanceMode}`;
-		Uniwind.setTheme(combinedTheme as any);
-	}, [themeColor, resolvedAppearanceMode]);
-
-	const setThemeColor = (color: ThemeColor) => {
-		setThemeColorState(color);
-	};
-
-	const setAppearanceMode = (mode: AppearanceMode) => {
-		setAppearanceModeState(mode);
-	};
-
-	return (
-		<SettingsContext.Provider
-			value={{
-				themeColor,
-				compassDesign,
-				appearanceMode,
-				resolvedAppearanceMode,
-				setThemeColor,
-				setCompassDesign,
-				setAppearanceMode,
-			}}
-		>
-			{children}
-		</SettingsContext.Provider>
-	);
+	const combinedTheme = `${color}-${resolvedMode}`;
+	Uniwind.setTheme(combinedTheme as any);
 };
 
-export const useSettings = () => {
-	const context = useContext(SettingsContext);
-	if (!context) {
-		throw new Error("useSettings must be used within a SettingsProvider");
+// Listeners for settings updates (pub-sub)
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+export const subscribe = (listener: Listener) => {
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
+};
+
+const notify = () => {
+	listeners.forEach((l) => l());
+};
+
+// Setters
+export const setThemeColor = (color: ThemeColor) => {
+	storage.set(COLOR_KEY, color);
+	syncTheme();
+	notify();
+};
+
+export const setCompassDesign = (design: CompassDesign) => {
+	storage.set(DESIGN_KEY, design);
+	notify();
+};
+
+export const setAppearanceMode = (mode: AppearanceMode) => {
+	storage.set(APPEARANCE_KEY, mode);
+	syncTheme();
+	notify();
+};
+
+// Listen to system theme changes to update the Uniwind theme color combination dynamically when in system mode
+Appearance.addChangeListener(() => {
+	if (getAppearanceMode() === "system") {
+		syncTheme();
+		notify();
 	}
-	return context;
+});
+
+// Perform initial sync on load
+syncTheme();
+
+// Custom hook to consume settings reactively
+export const useSettings = () => {
+	const { theme } = useUniwind();
+	const [state, setState] = useState(() => ({
+		themeColor: getThemeColor(),
+		compassDesign: getCompassDesign(),
+		appearanceMode: getAppearanceMode(),
+	}));
+
+	useEffect(() => {
+		return subscribe(() => {
+			setState({
+				themeColor: getThemeColor(),
+				compassDesign: getCompassDesign(),
+				appearanceMode: getAppearanceMode(),
+			});
+		});
+	}, []);
+
+	const resolvedAppearanceMode = theme.includes("dark") ? ("dark" as const) : ("light" as const);
+
+	return {
+		...state,
+		resolvedAppearanceMode,
+		setThemeColor,
+		setCompassDesign,
+		setAppearanceMode,
+	};
 };
