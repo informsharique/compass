@@ -54,6 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 				android: {
 					enableMinifyInReleaseBuilds: true,
 					enableShrinkResourcesInReleaseBuilds: true,
+					buildArchs: ["arm64-v8a"],
 				},
 			},
 		],
