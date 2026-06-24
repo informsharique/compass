@@ -113,7 +113,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({
 							>
 								Make a figure 8 to calibrate your compass.
 							</Typography.Heading>
-							<Typography className="text-zinc-500 dark:text-zinc-400 text-sm text-center leading-relaxed px-4">
+							<Typography className="text-muted text-sm text-center leading-relaxed px-4">
 								Keep your device away from metal (magnetic fields), and calibrate by
 								waving your phone in a figure-8 motion 3 times.
 							</Typography>
@@ -146,7 +146,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({
 						{/* Sensor & Magnetic Field Info Section */}
 						<View className="w-full border-t border-border/15 border-dashed pt-3 gap-2 px-4">
 							<View className="flex-row justify-between items-center">
-								<Typography className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
+								<Typography className="text-muted text-xs font-semibold">
 									Sensors&apos; Accuracy
 								</Typography>
 								<Typography
@@ -156,7 +156,7 @@ export const CompassCalibration: React.FC<CompassCalibrationProps> = ({
 								</Typography>
 							</View>
 							<View className="flex-row justify-between items-center">
-								<Typography className="text-zinc-500 dark:text-zinc-400 text-xs font-semibold">
+								<Typography className="text-muted text-xs font-semibold">
 									Magnetic Field Value
 								</Typography>
 								<Typography

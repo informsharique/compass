@@ -59,7 +59,7 @@ export const SettingsHeader: React.FC<SettingsHeaderProps> = ({ onClose }) => {
 				>
 					Settings
 				</Typography.Heading>
-				<Typography.Paragraph className="text-zinc-500 text-sm leading-tight">
+				<Typography.Paragraph className="text-muted text-sm leading-tight">
 					Configure your compass preferences
 				</Typography.Paragraph>
 			</View>

@@ -1,637 +1,134 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { View } from "react-native";
-import Svg, {
-	Circle,
-	Line,
-	Text as SvgText,
-	Polygon,
-	G,
-	Defs,
-	RadialGradient,
-	Stop,
-} from "react-native-svg";
+import Svg, { Defs, Line, Polygon, RadialGradient, Stop } from "react-native-svg";
 import Animated, {
+	useAnimatedReaction,
 	useAnimatedStyle,
 	useSharedValue,
 	withSpring,
-	useAnimatedProps,
-	SharedValue,
-	useAnimatedReaction,
+	SharedValue
 } from "react-native-reanimated";
 import { useThemeColor } from "heroui-native/hooks";
 import { PressableFeedback } from "heroui-native/pressable-feedback";
-import { useSettings } from "@/domain/settings/settings-store";
-import { triggerHaptics } from "@/presentation/utils/haptic-helper";
-import { applyAlpha } from "@/presentation/utils/color-helper";
 import { Typography } from "heroui-native/text";
 
-const AnimatedG = Animated.createAnimatedComponent(G);
+import { useSettings } from "@/domain/settings/settings-store";
+import { getBearingDeviation } from "@/domain/compass/heading-utils";
+import { triggerHaptics } from "@/presentation/utils/haptic-helper";
+import { applyAlpha } from "@/presentation/utils/color-helper";
 
-interface UprightTextProps {
-	x: number;
-	y: number;
-	rotation: SharedValue<number>;
-	children: React.ReactNode;
-	[key: string]: any;
-}
+import {
+	ClassicDial,
+	MinimalistDial,
+	ModernDial,
+	StandardDial,
+	AeroDial,
+	SilverDial,
+	NauticalDial,
+	UprightKaaba,
+} from "./dial";
 
-const UprightText: React.FC<UprightTextProps> = ({ x, y, rotation, children, ...props }) => {
-	const animatedProps = useAnimatedProps(() => {
-		return {
-			transform: [
-				{ translateX: x },
-				{ translateY: y },
-				{ rotate: `${-rotation.value}deg` as any },
-			] as any,
-		};
-	});
+const SVG_SIZE = 400;
+const SVG_CENTER = SVG_SIZE / 2;
+const DIAL_RADIUS = SVG_SIZE * 0.45;
+const KAABA_ICON_OFFSET = 38;
+const SVG_VIEWBOX = "-60 -60 520 520";
 
-	return (
-		<AnimatedG animatedProps={animatedProps}>
-			<SvgText x={0} y={0} textAnchor="middle" alignmentBaseline="middle" {...props}>
-				{children}
-			</SvgText>
-		</AnimatedG>
-	);
+const DIAL_SPRING_CONFIG = {
+	stiffness: 300,
+	damping: 38,
+	mass: 0.5,
 };
 
-interface CompassDialProps {
+export interface CompassDialProps {
 	headingSV: SharedValue<number>;
-	heading?: number;
+	/** Raw (un-smoothed) heading used for precise Qibla alignment detection. */
+	rawHeading?: number;
+	/** Smoothed heading used for the numeric readout display. */
+	heading: number;
+	qiblaDirection?: number;
 }
 
-export const CompassDial: React.FC<CompassDialProps> = ({ headingSV, heading }) => {
-	const { compassDesign } = useSettings();
-	const rotation = useSharedValue(0);
+export const CompassDial: React.FC<CompassDialProps> = ({
+	headingSV,
+	rawHeading,
+	heading,
+	qiblaDirection,
+}) => {
+	const { compassDesign, qiblaCompassEnabled } = useSettings();
 
-	const accentColor = useThemeColor("accent");
-	const foregroundColor = useThemeColor("foreground");
-	const borderLinkColor = useThemeColor("border");
-	const surfaceColor = useThemeColor("surface");
-	const backgroundColor = useThemeColor("background");
+	const [accentColor, foregroundColor, borderLinkColor, surfaceColor, backgroundColor] =
+		useThemeColor(["accent", "foreground", "border", "surface", "background"]);
 
-	const size = 400;
-	const center = size / 2;
-	const radius = size * 0.45;
+	// Qibla alignment: true when raw heading is within 1° of the Qibla bearing
+	const isQiblaAligned = useMemo(
+		() =>
+			qiblaCompassEnabled &&
+			qiblaDirection !== undefined &&
+			Math.abs(getBearingDeviation(rawHeading ?? 0, qiblaDirection)) <= 1,
+		[qiblaCompassEnabled, qiblaDirection, rawHeading]
+	);
 
-	// Shortest path interpolation to prevent 360 -> 0 degree spin-back glitch
+	React.useEffect(() => {
+		if (isQiblaAligned) {
+			triggerHaptics();
+		}
+	}, [isQiblaAligned]);
+
+	// Convert Qibla bearing to Cartesian (x, y) on the dial ring
+	const kaabaPosition = useMemo(() => {
+		const bearingRad = (qiblaDirection ?? 0) * (Math.PI / 180);
+		const ringRadius = DIAL_RADIUS + KAABA_ICON_OFFSET;
+		return {
+			x: SVG_CENTER + ringRadius * Math.sin(bearingRad),
+			y: SVG_CENTER - ringRadius * Math.cos(bearingRad),
+		};
+	}, [qiblaDirection]);
+
+	// Accumulated rotation in degrees — grows unbounded to avoid wrap-around jumps
+	const dialRotationSV = useSharedValue(0);
+
 	useAnimatedReaction(
 		() => headingSV.value,
-		(currentHeading, previousHeading) => {
-			if (currentHeading === null) return;
-			const prev = rotation.value;
+		(currentHeading) => {
+			"worklet";
+			const previous = dialRotationSV.value;
 			const target = -currentHeading;
-			const diff = (target - prev) % 360;
-			const shortestDiff = ((diff + 540) % 360) - 180;
-
-			rotation.value = withSpring(prev + shortestDiff, {
-				damping: 15,
-				stiffness: 120,
-				mass: 0.8,
-			});
+			// Resolve shortest angular path to prevent a full 360° spin on wrap-around
+			const shortestDiff = ((((target - previous) % 360) + 540) % 360) - 180;
+			dialRotationSV.value = withSpring(previous + shortestDiff, DIAL_SPRING_CONFIG);
 		}
 	);
 
-	const animatedDialStyle = useAnimatedStyle(() => {
-		return {
-			transform: [{ rotate: `${rotation.value}deg` }],
-		};
-	});
+	const animatedDialStyle = useAnimatedStyle(() => ({
+		transform: [{ rotate: `${dialRotationSV.value}deg` }],
+	}));
 
-	const handlePress = () => {
+	const handleDialPress = useCallback(() => {
 		triggerHaptics();
-	};
+	}, []);
 
-	const renderClassicDial = () => {
-		const ticks = [];
-		for (let i = 0; i < 360; i += 5) {
-			const isMajor = i % 30 === 0;
-			const isCardinal = i % 90 === 0;
-			const length = isCardinal ? 15 : isMajor ? 10 : 5;
-			const strokeWidth = isCardinal ? 2.5 : isMajor ? 1.5 : 1;
-			const color = isCardinal
-				? i === 0
-					? "#ef4444"
-					: accentColor
-				: isMajor
-					? foregroundColor
-					: `${foregroundColor}60`;
-
-			ticks.push(
-				<Line
-					key={`tick-classic-${i}`}
-					x1={center}
-					y1={center - radius}
-					x2={center}
-					y2={center - radius + length}
-					stroke={color}
-					strokeWidth={strokeWidth}
-					transform={`rotate(${i}, ${center}, ${center})`}
-				/>
-			);
-		}
-
-		return (
-			<G>
-				{/* Outer Glow Ring */}
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius + 4}
-					stroke={accentColor}
-					strokeWidth="1.5"
-					fill="none"
-					opacity="0.3"
-				/>
-
-				{/* Dial Background */}
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius}
-					fill="url(#dialGrad)"
-					stroke={`${borderLinkColor}40`}
-					strokeWidth="1.5"
-				/>
-
-				{ticks}
-
-				{/* Cardinal Labels - placed at radius 148 */}
-				<UprightText
-					x={center}
-					y={200 - 148}
-					rotation={rotation}
-					fill="#ef4444"
-					fontSize="18"
-					fontWeight="bold"
-				>
-					N
-				</UprightText>
-				<UprightText
-					x={200 + 148}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="16"
-					fontWeight="bold"
-				>
-					E
-				</UprightText>
-				<UprightText
-					x={center}
-					y={200 + 148}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="16"
-					fontWeight="bold"
-				>
-					S
-				</UprightText>
-				<UprightText
-					x={200 - 148}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="16"
-					fontWeight="bold"
-				>
-					W
-				</UprightText>
-
-				{/* Ordinals - placed at radius 132 */}
-				<UprightText
-					x={200 + 93.3}
-					y={200 - 93.3}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-				>
-					NE
-				</UprightText>
-				<UprightText
-					x={200 + 93.3}
-					y={200 + 93.3}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-				>
-					SE
-				</UprightText>
-				<UprightText
-					x={200 - 93.3}
-					y={200 + 93.3}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-				>
-					SW
-				</UprightText>
-				<UprightText
-					x={200 - 93.3}
-					y={200 - 93.3}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-				>
-					NW
-				</UprightText>
-
-				{/* Classic Compass Rose */}
-				<G transform={`translate(${center - 25}, ${center - 25})`}>
-					<Polygon points="25,5 29,21 25,25" fill="#ef4444" />
-					<Polygon points="25,5 21,21 25,25" fill="#b91c1c" />
-					<Polygon points="25,45 21,29 25,25" fill={foregroundColor} opacity="0.8" />
-					<Polygon points="25,45 29,29 25,25" fill={foregroundColor} opacity="0.6" />
-					<Polygon points="45,25 29,21 25,25" fill={foregroundColor} opacity="0.8" />
-					<Polygon points="45,25 29,29 25,25" fill={foregroundColor} opacity="0.6" />
-					<Polygon points="5,25 21,29 25,25" fill={foregroundColor} opacity="0.8" />
-					<Polygon points="5,25 21,21 25,25" fill={foregroundColor} opacity="0.6" />
-					<Circle cx="25" cy="25" r="4" fill="#09090b" />
-				</G>
-			</G>
-		);
-	};
-
-	const renderModernDial = () => {
-		// HUD segments and lines
-		const ticks = [];
-		for (let i = 0; i < 360; i += 10) {
-			const isCardinal = i % 90 === 0;
-			const length = isCardinal ? 12 : 6;
-			ticks.push(
-				<Line
-					key={`tick-modern-${i}`}
-					x1={center}
-					y1={center - radius}
-					x2={center}
-					y2={center - radius + length}
-					stroke={isCardinal ? accentColor : `${accentColor}80`}
-					strokeWidth={isCardinal ? 2 : 1}
-					transform={`rotate(${i}, ${center}, ${center})`}
-				/>
-			);
-		}
-
-		return (
-			<G>
-				{/* Radar concentric rings */}
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius}
-					fill="none"
-					stroke={`${accentColor}30`}
-					strokeWidth="1.5"
-				/>
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius - 20}
-					fill="none"
-					stroke={`${accentColor}15`}
-					strokeWidth="1"
-				/>
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius * 0.4}
-					fill="none"
-					stroke={`${accentColor}10`}
-					strokeWidth="1"
-					strokeDasharray="4 4"
-				/>
-
-				{/* Crosshair grids */}
-				<Line
-					x1={center}
-					y1={center - radius}
-					x2={center}
-					y2={center + radius}
-					stroke={`${accentColor}15`}
-					strokeWidth="1"
-				/>
-				<Line
-					x1={center - radius}
-					y1={center}
-					x2={center + radius}
-					y2={center}
-					stroke={`${accentColor}15`}
-					strokeWidth="1"
-				/>
-
-				{ticks}
-
-				{/* Modern Sci-Fi Text labels - Letters at radius 146 */}
-				<UprightText
-					x={center}
-					y={200 - 146}
-					rotation={rotation}
-					fill={accentColor}
-					fontSize="16"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					N
-				</UprightText>
-				<UprightText
-					x={200 + 146}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					E
-				</UprightText>
-				<UprightText
-					x={center}
-					y={200 + 146}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					S
-				</UprightText>
-				<UprightText
-					x={200 - 146}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					W
-				</UprightText>
-
-				{/* Modern Sci-Fi Text labels - Degrees at radius 124 */}
-				<UprightText
-					x={center}
-					y={200 - 124}
-					rotation={rotation}
-					fill={`${accentColor}90`}
-					fontSize="11"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					0°
-				</UprightText>
-				<UprightText
-					x={200 + 124}
-					y={center}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					90°
-				</UprightText>
-				<UprightText
-					x={center}
-					y={200 + 124}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					180°
-				</UprightText>
-				<UprightText
-					x={200 - 124}
-					y={center}
-					rotation={rotation}
-					fill={`${foregroundColor}90`}
-					fontSize="11"
-					fontWeight="bold"
-					fontFamily="monospace"
-				>
-					270°
-				</UprightText>
-
-				{/* Digital display box */}
-				<Circle
-					cx={center}
-					cy={center}
-					r="28"
-					fill="#00000030"
-					stroke={`${accentColor}40`}
-					strokeWidth="1.5"
-				/>
-
-				{/* Core Laser HUD center dot */}
-				<Circle cx={center} cy={center} r="3" fill={accentColor} />
-			</G>
-		);
-	};
-
-	const renderMinimalistDial = () => {
-		// Bauhaus clean design
-		const ticks = [];
-		for (let i = 0; i < 360; i += 30) {
-			const isCardinal = i % 90 === 0;
-			ticks.push(
-				<Line
-					key={`tick-minimal-${i}`}
-					x1={center}
-					y1={center - radius + 5}
-					x2={center}
-					y2={center - radius + 12}
-					stroke={isCardinal ? foregroundColor : `${foregroundColor}40`}
-					strokeWidth="1.5"
-					transform={`rotate(${i}, ${center}, ${center})`}
-				/>
-			);
-		}
-
-		return (
-			<G>
-				{/* Borderless Dial */}
-				<Circle
-					cx={center}
-					cy={center}
-					r={radius}
-					fill="none"
-					stroke={`${foregroundColor}15`}
-					strokeWidth="1"
-				/>
-
-				{ticks}
-
-				{/* Clean, thin Typography - placed at radius 145 */}
-				<UprightText
-					x={center}
-					y={200 - 145}
-					rotation={rotation}
-					fill="#ef4444"
-					fontSize="16"
-					fontWeight="300"
-				>
-					N
-				</UprightText>
-				<UprightText
-					x={200 + 145}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="300"
-				>
-					E
-				</UprightText>
-				<UprightText
-					x={center}
-					y={200 + 145}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="300"
-				>
-					S
-				</UprightText>
-				<UprightText
-					x={200 - 145}
-					y={center}
-					rotation={rotation}
-					fill={foregroundColor}
-					fontSize="14"
-					fontWeight="300"
-				>
-					W
-				</UprightText>
-
-				{/* Minimalist Pointer Needles */}
-				<G>
-					{/* North needle pointing up */}
-					<Polygon
-						points={`${center - 4},${center} ${center + 4},${center} ${center},${center - radius + 25}`}
-						fill="#ef4444"
-					/>
-					{/* South needle pointing down */}
-					<Polygon
-						points={`${center - 4},${center} ${center + 4},${center} ${center},${center + radius - 25}`}
-						fill={foregroundColor}
-						opacity="0.6"
-					/>
-
-					<Circle
-						cx={center}
-						cy={center}
-						r="6"
-						fill="#09090b"
-						stroke={foregroundColor}
-						strokeWidth="1.5"
-					/>
-				</G>
-			</G>
-		);
-	};
-
-	const renderStandardDial = () => {
-		const ticks = [];
-		for (let i = 0; i < 360; i += 2) {
-			const isMajor30 = i % 30 === 0;
-			const isMajor10 = i % 10 === 0;
-			
-			const length = isMajor30 ? 16 : isMajor10 ? 10 : 6;
-			const strokeWidth = isMajor30 ? 2 : isMajor10 ? 1.5 : 1;
-			
-			const color = isMajor30
-				? i === 0
-					? accentColor
-					: foregroundColor
-				: isMajor10
-					? applyAlpha(foregroundColor, "65%")
-					: applyAlpha(foregroundColor, "30%");
-
-			ticks.push(
-				<Line
-					key={`tick-standard-${i}`}
-					x1={center}
-					y1={center - radius}
-					x2={center}
-					y2={center - radius + length}
-					stroke={color}
-					strokeWidth={strokeWidth}
-					transform={`rotate(${i}, ${center}, ${center})`}
-				/>
-			);
-		}
-
-		const labels = [
-			{ angle: 0, text: "N", isCardinal: true, isNorth: true },
-			{ angle: 30, text: "30" },
-			{ angle: 60, text: "60" },
-			{ angle: 90, text: "E", isCardinal: true },
-			{ angle: 120, text: "120" },
-			{ angle: 150, text: "150" },
-			{ angle: 180, text: "S", isCardinal: true },
-			{ angle: 210, text: "210" },
-			{ angle: 240, text: "240" },
-			{ angle: 270, text: "W", isCardinal: true },
-			{ angle: 300, text: "300" },
-			{ angle: 330, text: "330" },
-		];
-
-		const labelElements = labels.map((lbl) => {
-			const color = lbl.isNorth
-				? accentColor
-				: lbl.isCardinal
-					? foregroundColor
-					: applyAlpha(foregroundColor, "60%");
-			const fontSize = lbl.isCardinal ? "22" : "14";
-			const fontWeight = "bold";
-
-			return (
-				<G key={`label-standard-${lbl.angle}`} transform={`rotate(${lbl.angle}, ${center}, ${center})`}>
-					<SvgText
-						x={center}
-						y={center - radius + 38}
-						fill={color}
-						fontSize={fontSize}
-						fontWeight={fontWeight}
-						textAnchor="middle"
-						alignmentBaseline="middle"
-					>
-						{lbl.text}
-					</SvgText>
-				</G>
-			);
-		});
-
-		return (
-			<G>
-				{ticks}
-				{labelElements}
-			</G>
-		);
+	const dialColors = {
+		accentColor,
+		foregroundColor,
+		borderLinkColor,
+		surfaceColor,
+		backgroundColor,
 	};
 
 	return (
 		<PressableFeedback
-			onPress={handlePress}
-			animation={{
-				scale: {
-					value: 1,
-				},
-			}}
-			className="w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] md:w-[400px] md:h-[400px] items-center justify-center relative"
+			onPress={handleDialPress}
+			animation={{ scale: { value: 1 } }}
+			className="w-[380px] h-[380px] sm:w-[440px] sm:h-[440px] md:w-[500px] md:h-[500px] items-center justify-center relative"
 		>
 			<PressableFeedback.Ripple
-				animation={{
-					backgroundColor: { value: applyAlpha(foregroundColor, "20%") },
-				}}
+				animation={{ backgroundColor: { value: applyAlpha(foregroundColor, "20%") } }}
 			/>
-			{/* Rotating Dial Layer */}
-			<Animated.View
-				className="w-full h-full items-center justify-center"
-				style={animatedDialStyle}
-			>
-				<Svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
+
+			{/* Rotating SVG layer — contains the dial face and Kaaba icon */}
+			<Animated.View className="w-full h-full items-center justify-center" style={animatedDialStyle}>
+				<Svg width="100%" height="100%" viewBox={SVG_VIEWBOX}>
 					<Defs>
 						<RadialGradient id="dialGrad" cx="50%" cy="50%" rx="50%" ry="50%">
 							<Stop offset="70%" stopColor={surfaceColor} stopOpacity="0.9" />
@@ -639,39 +136,50 @@ export const CompassDial: React.FC<CompassDialProps> = ({ headingSV, heading }) 
 						</RadialGradient>
 					</Defs>
 
-					{/* Render selected compass face design */}
-					{compassDesign === "classic" && renderClassicDial()}
-					{compassDesign === "modern" && renderModernDial()}
-					{compassDesign === "minimalist" && renderMinimalistDial()}
-					{compassDesign === "standard" && renderStandardDial()}
+					{compassDesign === "classic" && <ClassicDial {...dialColors} rotationSV={dialRotationSV} />}
+					{compassDesign === "modern" && <ModernDial {...dialColors} rotationSV={dialRotationSV} />}
+					{compassDesign === "minimalist" && <MinimalistDial {...dialColors} rotationSV={dialRotationSV} />}
+					{compassDesign === "standard" && <StandardDial {...dialColors} />}
+					{compassDesign === "aero" && <AeroDial {...dialColors} rotationSV={dialRotationSV} />}
+					{compassDesign === "silver" && <SilverDial {...dialColors} rotationSV={dialRotationSV} />}
+					{compassDesign === "nautical" && <NauticalDial {...dialColors} rotationSV={dialRotationSV} />}
+
+					{qiblaCompassEnabled && qiblaDirection !== undefined && (
+						<UprightKaaba
+							x={kaabaPosition.x}
+							y={kaabaPosition.y}
+							rotationSV={dialRotationSV}
+							isAligned={isQiblaAligned}
+						/>
+					)}
 				</Svg>
 			</Animated.View>
 
-			{/* Center Heading Readout Overlay for Standard Dial */}
+			{/* Heading readout overlay — only visible on the Standard dial */}
 			{compassDesign === "standard" && (
 				<View className="absolute inset-0 items-center justify-center pointer-events-none">
 					<Typography.Heading
 						type="h2"
 						className="text-4xl sm:text-5xl font-black text-foreground tabular-nums tracking-tighter"
 					>
-						{heading !== undefined ? `${heading}°` : "0°"}
+						{`${heading}°`}
 					</Typography.Heading>
 				</View>
 			)}
 
-			{/* Stationary Top Marker Overlay */}
+			{/* Fixed north marker — does not rotate with the dial */}
 			<View className="absolute inset-0 items-center pointer-events-none">
-				<Svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
+				<Svg width="100%" height="100%" viewBox={SVG_VIEWBOX}>
 					<Polygon
-						points={`${center - 8},14 ${center + 8},14 ${center},26`}
-						fill={accentColor}
+						points={`${SVG_CENTER - 8},14 ${SVG_CENTER + 8},14 ${SVG_CENTER},26`}
+						fill={isQiblaAligned ? "#fbbf24" : accentColor}
 					/>
 					<Line
-						x1={center}
+						x1={SVG_CENTER}
 						y1="0"
-						x2={center}
+						x2={SVG_CENTER}
 						y2="14"
-						stroke={accentColor}
+						stroke={isQiblaAligned ? "#fbbf24" : accentColor}
 						strokeWidth="2.5"
 					/>
 				</Svg>

@@ -17,6 +17,7 @@ export function useCompass() {
 	});
 
 	const headingSV = useSharedValue(0);
+	const headingSVRef = useRef(headingSV);
 
 	const lastAngle = useRef<number | null>(null);
 	const accelRef = useRef<{ x: number; y: number; z: number } | null>(null);
@@ -26,8 +27,8 @@ export function useCompass() {
 	useEffect(() => {
 		if (!isFocused) return;
 
-		Magnetometer.setUpdateInterval(16);
-		Accelerometer.setUpdateInterval(16);
+		Magnetometer.setUpdateInterval(32);
+		Accelerometer.setUpdateInterval(32);
 
 		const calculateHeading = () => {
 			if (!accelRef.current || !magRef.current) return;
@@ -104,7 +105,7 @@ export function useCompass() {
 			}
 
 			lastAngle.current = angle;
-			headingSV.value = angle;
+			headingSVRef.current.value = angle;
 
 			const now = Date.now();
 			if (now - lastUpdateRef.current > 150) {
@@ -148,11 +149,10 @@ export function useCompass() {
 			accelSubscription.remove();
 			magSubscription.remove();
 		};
-	}, [isFocused, headingSV]);
+	}, [isFocused]);
 
 	return {
 		...state,
 		headingSV,
 	};
 }
-

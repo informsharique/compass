@@ -19,7 +19,7 @@ export const BearingDisplay: React.FC<BearingDisplayProps> = ({
 	if (bearingLock === null) {
 		return (
 			<View className="items-center py-2">
-				<Typography className="text-zinc-500 text-sm font-medium">
+				<Typography className="text-muted text-sm font-medium">
 					Tap the compass dial to lock your heading
 				</Typography>
 			</View>
