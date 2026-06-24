@@ -44,7 +44,7 @@ export function AppearanceButton({
 			/>
 			<Typography
 				className={`text-xs font-semibold ${
-					isActive ? "text-accent" : "text-zinc-500"
+					isActive ? "text-accent" : "text-muted"
 				}`}
 			>
 				{label}

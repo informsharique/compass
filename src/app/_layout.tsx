@@ -17,11 +17,20 @@ import {
 } from "@/presentation/components/home/compass-header";
 import { BlurTargetContext, BlurTargetView } from "@/presentation/components/blur";
 
+import { startLocationService } from "@/domain/location/location-store";
+
 function AppNavigator(): JSX.Element {
 	const backgroundColor = useThemeColor("background");
 	const { theme } = useUniwind();
 	const isDark = theme.includes("dark");
 	const blurTargetRef = useRef<View>(null);
+
+	useEffect(() => {
+		const cleanup = startLocationService();
+		return () => {
+			cleanup();
+		};
+	}, []);
 
 	useEffect(() => {
 		if (backgroundColor) {
@@ -46,7 +55,6 @@ function AppNavigator(): JSX.Element {
 							headerShown: false,
 							contentStyle: { backgroundColor },
 							statusBarStyle: isDark ? "light" : "dark",
-							statusBarAnimation: "fade",
 						}}
 					>
 						<Stack.Screen

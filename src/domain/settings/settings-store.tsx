@@ -6,17 +6,19 @@ import { Appearance } from "react-native";
 export const storage = createMMKV();
 
 export type ThemeColor = "cyan" | "amber" | "crimson" | "emerald";
-export type CompassDesign = "classic" | "modern" | "minimalist" | "standard";
+export type CompassDesign = "classic" | "modern" | "minimalist" | "standard" | "aero" | "silver" | "nautical";
 export type AppearanceMode = "light" | "dark" | "system";
 
 const COLOR_KEY = "settings.themeColor";
 const DESIGN_KEY = "settings.compassDesign";
 const APPEARANCE_KEY = "settings.appearanceMode";
+const QIBLA_KEY = "settings.qiblaCompassEnabled";
 
 // Getter helper functions
 export const getThemeColor = (): ThemeColor => (storage.getString(COLOR_KEY) as ThemeColor) || "cyan";
 export const getCompassDesign = (): CompassDesign => (storage.getString(DESIGN_KEY) as CompassDesign) || "standard";
 export const getAppearanceMode = (): AppearanceMode => (storage.getString(APPEARANCE_KEY) as AppearanceMode) || "system";
+export const getQiblaCompassEnabled = (): boolean => storage.getBoolean(QIBLA_KEY) ?? false;
 
 // Synchronize theme in Uniwind using CSS-defined themes and Uniwind's theme resolution
 export const syncTheme = () => {
@@ -69,6 +71,11 @@ export const setAppearanceMode = (mode: AppearanceMode) => {
 	notify();
 };
 
+export const setQiblaCompassEnabled = (enabled: boolean) => {
+	storage.set(QIBLA_KEY, enabled);
+	notify();
+};
+
 // Listen to system theme changes to update the Uniwind theme color combination dynamically when in system mode
 Appearance.addChangeListener(() => {
 	if (getAppearanceMode() === "system") {
@@ -87,6 +94,7 @@ export const useSettings = () => {
 		themeColor: getThemeColor(),
 		compassDesign: getCompassDesign(),
 		appearanceMode: getAppearanceMode(),
+		qiblaCompassEnabled: getQiblaCompassEnabled(),
 	}));
 
 	useEffect(() => {
@@ -95,6 +103,7 @@ export const useSettings = () => {
 				themeColor: getThemeColor(),
 				compassDesign: getCompassDesign(),
 				appearanceMode: getAppearanceMode(),
+				qiblaCompassEnabled: getQiblaCompassEnabled(),
 			});
 		});
 	}, []);
@@ -107,5 +116,6 @@ export const useSettings = () => {
 		setThemeColor,
 		setCompassDesign,
 		setAppearanceMode,
+		setQiblaCompassEnabled,
 	};
 };

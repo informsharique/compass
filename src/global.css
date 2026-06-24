@@ -102,8 +102,8 @@
 		--surface-foreground: hsl(240, 10%, 3.9%);
 		--accent: hsl(180, 100%, 38%);
 		--accent-foreground: hsl(0, 0%, 100%);
-		--border: hsl(180, 10%, 90%);
-		--muted: hsl(240, 3.8%, 46.1%);
+		--border: hsl(180, 20%, 90%);
+		--muted: hsl(180, 20%, 45%);
 		--surface-secondary: var(--background);
 		--surface-secondary-foreground: var(--foreground);
 		--surface-tertiary: var(--background);
@@ -145,8 +145,8 @@
 		--surface-foreground: hsl(0, 0%, 98%);
 		--accent: hsl(180, 100%, 50%);
 		--accent-foreground: hsl(240, 10%, 3.9%);
-		--border: hsl(240, 3.7%, 15.9%);
-		--muted: hsl(240, 5%, 64.9%);
+		--border: hsl(180, 25%, 15%);
+		--muted: hsl(180, 20%, 65%);
 		--surface-secondary: var(--background);
 		--surface-secondary-foreground: var(--foreground);
 		--surface-tertiary: var(--background);

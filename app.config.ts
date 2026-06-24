@@ -6,7 +6,7 @@ dotenv.config();
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
 	...config,
-	name: "compass",
+	name: "Compass",
 	slug: "compass",
 	version: packageJson.version,
 	orientation: "portrait",

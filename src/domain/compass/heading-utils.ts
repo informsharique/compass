@@ -17,6 +17,13 @@ const CARDINALS = [
 	"NNW",
 ] as const;
 
+// Kaaba coordinates
+const KAABA_LAT = 21.422487;
+const KAABA_LON = 39.826206;
+
+const KAABA_LAT_RAD = KAABA_LAT * (Math.PI / 180);
+const KAABA_LON_RAD = KAABA_LON * (Math.PI / 180);
+
 export function getCardinalDirection(degree: number): string {
 	// Normalize degree to 0 - 360 range
 	const normalized = ((degree % 360) + 360) % 360;
@@ -62,4 +69,19 @@ export function getBearingDeviation(current: number, target: number): number {
 	while (diff > 180) diff -= 360;
 
 	return diff;
+}
+
+export function calculateQiblaDirection(lat: number, lon: number): number {
+	const latRad = lat * (Math.PI / 180);
+	const lonRad = lon * (Math.PI / 180);
+
+	const dLon = KAABA_LON_RAD - lonRad;
+
+	const y = Math.sin(dLon) * Math.cos(KAABA_LAT_RAD);
+	const x =
+		Math.cos(latRad) * Math.sin(KAABA_LAT_RAD) -
+		Math.sin(latRad) * Math.cos(KAABA_LAT_RAD) * Math.cos(dLon);
+
+	let bearing = Math.atan2(y, x) * (180 / Math.PI);
+	return (bearing + 360) % 360;
 }
