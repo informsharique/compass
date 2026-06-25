@@ -1,19 +1,22 @@
 # Compass Mobile App 🧭
 
-A premium, high-performance, and beautifully designed mobile compass application built with **React Native**, **Expo SDK 56**, and **HeroUI Native**. It follows clean architecture principles (DDD), complete with custom signal damping and EAS cloud build configurations.
+A premium, high-performance, and beautifully designed mobile compass application built with **React Native**, **Expo SDK 56**, and **HeroUI Native**. It follows clean architecture principles (DDD), complete with custom signal damping, multiple dial designs, Qibla support, and EAS cloud build configurations.
 
 ---
 
 ## 🌟 Key Features
 
 - **Real-time Heading Readout:** High-precision compass dial with support for true heading and magnetic heading.
+- **Multiple Compass Dial Designs:** Swappable high-fidelity dials, including **Standard**, **Classic**, **Modern**, **Minimalist**, **Silver**, **Nautical**, and **Aero** dials.
+- **Qibla Direction Support:** Built-in Qibla mode that calculates the Kaaba bearing from your GPS coordinates, complete with a Kaaba indicator on the dial that lights up when aligned.
 - **Cardinal & Degree Display:** Instant updates on headings (N, NE, E, SE, S, SW, W, NW) with exact degrees.
+- **Location Persistence & Reverse Geocoding:** Saves the last known location and coordinates via **MMKV** storage, displaying current locality and coordinates in settings and details.
+- **System-Aware Haptic Feedback:** A custom Expo native module (`system-haptic`) detects system-wide haptic settings to respect the user's OS vibration preferences.
 - **Sensor Telemetry & Details:** Complete location coordinates (latitude, longitude, altitude) and heading accuracy details, accessed via an elegant **Information Dialog** overlay.
 - **Advanced Signal Filtering:** Exponential Moving Average (EMA) damping filter to eliminate sensor jitter, combined with dynamic screen-down orientation inversion (via Accelerometer) to prevent 180° heading flips.
-- **Dynamic Theme Support:** Full light and dark mode styling utilizing HeroUI Native and Tailwind CSS (Uniwind).
+- **Dynamic Theme Support:** Full light and dark mode styling utilizing HeroUI Native and Tailwind CSS (Uniwind), featuring beautiful colors like Cyber Cyan, Amber Gold, Crimson Red, and Emerald Green.
 - **Figure-Eight Calibration:** Interactive calibration UI to assist users when sensor precision is low (earth's magnetic field outside the 25–70 µT range).
-- **Unified Haptic Feedback:** System-wide haptic feedback wrapping android-specific native effects and iOS medium impacts.
-- **Modern Navigation:** Tabless flow with clean modal dialogs and settings page using Expo Router.
+- **Modern Navigation:** Tabless flow with clean route-driven dialogs and a detailed settings page using Expo Router.
 
 ---
 
@@ -22,7 +25,8 @@ A premium, high-performance, and beautifully designed mobile compass application
 - **Framework:** [Expo (v56)](https://expo.dev) with Expo Router (file-based routing).
 - **Core UI Library:** [HeroUI Native](https://heroui.com/docs/native) (premium design components).
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) via [Uniwind](https://docs.uniwind.dev) for cross-platform utility classes.
-- **State Management:** React Context & Custom Hooks.
+- **State Management & Storage:** [MMKV](https://github.com/mrousavy/react-native-mmkv) for high-performance key-value storage, paired with React Context.
+- **Native Modules:** Custom Expo module (`system-haptic`) for Android and iOS system haptic status verification.
 - **Environment:** React 19 (with React Compiler enabled) and TypeScript.
 - **Package Manager:** Bun (recommended) or npm.
 
@@ -38,6 +42,8 @@ compass/
 ├── android/                    # Android native project assets & configs
 ├── ios/                        # iOS native project assets & configs
 ├── assets/                     # App icons, splash screens, and images
+├── modules/                    # Custom native Expo modules
+│   └── system-haptic/          # Checks system-wide haptics preference on Android & iOS
 ├── src/
 │   ├── @types/                 # Global TypeScript type declarations
 │   ├── app/                    # Expo Router file-based screens (Entrypoints)
@@ -46,11 +52,16 @@ compass/
 │   │   └── settings.tsx        # Settings and configurations screen
 │   ├── domain/                 # Core entities, pure logic, and definitions (No UI/React imports)
 │   │   ├── compass/            # Heading utilities, interfaces, cardinal calculations
-│   │   └── settings/           # Global preferences and settings store logic
+│   │   ├── location/           # Location storage logic & persistence interfaces
+│   │   └── settings/           # Global preferences and settings store logic (MMKV)
 │   ├── application/            # Application state orchestrators, queries, and React Hooks
-│   │   └── compass/            # Hooks connecting domain logic to presentation layer
+│   │   └── compass/            # Hooks connecting domain/location logic to presentation layer
 │   └── presentation/           # React Native UI components, styling, and visual elements
-│       └── components/         # Dial, calibration, information dialog, headers, and UI elements
+│       ├── components/         # Dial, calibration, settings details, and headers
+│       │   ├── home/           # Home-related UI (Compass dials, calibration, readout)
+│       │   │   └── dial/       # Dial variants (Classic, Modern, Aero, Nautical, Silver, Minimalist, Standard)
+│       │   └── settings/       # Settings-related UI (Appearance, colors, controls)
+│       └── utils/              # UI-specific helpers (colors, haptics, theme maps)
 ├── app.config.ts               # Dynamic Expo app configuration (Icon/Theme/Splash config)
 ├── eas.json                    # EAS Build profiles (Development, Simulator, Production)
 ├── package.json                # Project dependencies and script definitions
@@ -206,3 +217,4 @@ bun run start
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
